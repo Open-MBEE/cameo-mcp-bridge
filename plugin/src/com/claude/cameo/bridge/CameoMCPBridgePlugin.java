@@ -4,6 +4,7 @@ import com.nomagic.magicdraw.plugins.Plugin;
 import com.nomagic.magicdraw.core.Application;
 import com.claude.cameo.bridge.util.BridgeCapabilities;
 import com.claude.cameo.bridge.util.BridgeDiagnostics;
+import com.claude.cameo.bridge.util.BridgePort;
 import javax.swing.SwingUtilities;
 import java.util.logging.Logger;
 
@@ -25,8 +26,12 @@ public class CameoMCPBridgePlugin extends Plugin {
             if (SwingUtilities.isEventDispatchThread()) append.run();
             else SwingUtilities.invokeLater(append);
         });
-        int port = Integer.parseInt(System.getProperty("cameo.mcp.port", "18740"));
         try {
+            BridgeOptions options = new BridgeOptions();
+            Application.getInstance().getEnvironmentOptions().addGroup(options);
+            BridgeDiagnostics.log("Registered Cameo MCP Bridge Environment Options (plugin "
+                    + BridgeCapabilities.pluginVersion() + ")");
+            int port = BridgePort.resolve(System.getProperty("cameo.mcp.port"), options.getPort());
             server = new HttpBridgeServer(port);
             server.start();
             Application.getInstance().getGUILog().log(

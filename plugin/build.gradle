@@ -70,7 +70,7 @@ tasks.withType(Test).configureEach {
 
 jar {
     archiveBaseName = 'cameo-mcp-bridge'
-    archiveVersion = '3.0.0'
+    archiveVersion = '3.1.0'
     destinationDirectory = layout.buildDirectory.dir('libs')
 }
 
@@ -85,7 +85,7 @@ tasks.register('assemblePlugin', Sync) {
 // paths relative to the Cameo installation root.
 tasks.register('packagePlugin', Zip) {
     dependsOn assemblePlugin
-    archiveFileName = 'cameo-mcp-bridge-3.0.0-2024x.zip'
+    archiveFileName = 'cameo-mcp-bridge-3.1.0-2024x.zip'
     destinationDirectory = layout.buildDirectory
     from(layout.buildDirectory.dir('plugin-dist')) {
         into 'plugins'

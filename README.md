@@ -1,6 +1,6 @@
 # Cameo MCP Bridge
 
-Version **3.0.0** exposes native model export resources and guarded structural
+Version **3.1.0** exposes native model export resources and guarded structural
 creation. It keeps Cameo SDK access, model consistency and transaction ownership
 in this plugin; consumers own interpretation and transformation of exported data.
 See [native export](docs/development/native-model-export.md) and
@@ -121,9 +121,12 @@ Gradle must run on a Java 17 JDK. You can also set `JDK17_HOME` or `JAVA17_HOME`
 
 For a ZIP that can be imported through Cameo's Resource/Plugin Manager, run
 `./gradlew packagePlugin` with the same `cameoHome` and `jdk17Home` properties.
-The archive is `plugin/build/cameo-mcp-bridge-2.4.0-2024x.zip` (relative to the
+The archive is `plugin/build/cameo-mcp-bridge-3.1.0-2024x.zip` (relative to the
 repository root). It contains the resource installation descriptor and the
 `plugins/` directory structure required by the installer.
+
+See [building and publishing the plugin ZIP](docs/development/plugin-releases.md)
+for Windows commands, archive verification, and GitHub release publishing.
 
 **2. Deploy to Cameo:**
 
@@ -204,7 +207,12 @@ use `-Dcameo.mcp.diagnostics.gui=false`. See [diagnostic testing](docs/developme
 | `JAVA17_HOME` | unset | Alternate Java 17 home override |
 | `CAMEO_MCP_STRUCTURED_RESPONSES` | deprecated | Structured MCP object responses are now always used; this flag is kept only for backward compatibility with older docs |
 
-The Java plugin reads the port from system property `cameo.mcp.port` (default `18740`). To change it, add to your Cameo `*.vmoptions` file:
+In version 3.1.0, choose **Options > Environment >
+Cameo MCP Bridge > Listening port** in Cameo's System Options dialog, enter a port
+from 1 to 65535, and restart Cameo. The default is `18740`. This setting is not included in the published 3.0.0 ZIP.
+
+The Java system property `cameo.mcp.port` overrides the saved setting and remains
+available in 3.0.0. Add it to your Cameo `*.vmoptions` file:
 
 ```
 -Dcameo.mcp.port=18741
@@ -648,6 +656,11 @@ cd plugin
 ```
 
 The output goes to `plugin/build/plugin-dist/com.claude.cameo.bridge/`.
+
+For a downloadable 2024x ZIP and GitHub release, follow the
+[plugin release guide](docs/development/plugin-releases.md). Additional 2022x
+support is proposed in the [compatibility plan](docs/plans/2022x-plugin-support.md);
+the published 2024x build remains the supported baseline.
 
 ### Running the MCP Server Standalone
 

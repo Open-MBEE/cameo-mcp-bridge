@@ -12,7 +12,7 @@ from typing import Any, Optional
 import httpx
 from PIL import Image
 
-BRIDGE_PLUGIN_VERSION = "3.0.0"
+BRIDGE_PLUGIN_VERSION = "3.1.0"
 BRIDGE_API_VERSION = "v1"
 BRIDGE_HANDSHAKE_VERSION = "1"
 

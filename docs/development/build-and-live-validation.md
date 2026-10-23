@@ -4,6 +4,11 @@ This repo is commonly used from Windows against a local CATIA Magic install at `
 
 ## Java Build
 
+For installer ZIP packaging and GitHub publication, use the
+[2024x plugin release guide](plugin-releases.md). Build and publication are
+separate from deployment and live model validation below; deployment requires
+an explicit installation task.
+
 From `Z:\cameo-mcp-bridge\plugin`:
 
 ```powershell

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resourceDescriptor critical="false"
+                    date="2026-10-22"
+                    description="Local MCP bridge for Cameo model queries and guarded model operations."
+                    id="11974001"
+                    mdVersionMin="2024x"
+                    mdVersionMax="higher"
+                    name="Cameo MCP Bridge"
+                    product="Cameo MCP Bridge"
+                    type="Plugin">
+    <version human="3.0.0" resource="30000" internal="30000"/>
+    <provider name="Claude Code"/>
+    <edition>Reader</edition>
+    <edition>Community</edition>
+    <edition>Standard</edition>
+    <edition>Professional Java</edition>
+    <edition>Professional C++</edition>
+    <edition>Professional C#</edition>
+    <edition>Professional</edition>
+    <edition>Architect</edition>
+    <edition>Enterprise</edition>
+    <installation>
+        <file from="plugins/com.claude.cameo.bridge/plugin.xml" to="plugins/com.claude.cameo.bridge/plugin.xml"/>
+        <file from="plugins/com.claude.cameo.bridge/cameo-mcp-bridge-3.0.0.jar" to="plugins/com.claude.cameo.bridge/cameo-mcp-bridge-3.0.0.jar"/>
+        <file from="data/resourcemanager/MDR_Plugin_Cameo_MCP_Bridge_11974001_descriptor.xml" to="data/resourcemanager/MDR_Plugin_Cameo_MCP_Bridge_11974001_descriptor.xml"/>
+    </installation>
+</resourceDescriptor>

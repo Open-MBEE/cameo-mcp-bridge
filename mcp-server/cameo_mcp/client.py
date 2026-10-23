@@ -12,7 +12,7 @@ from typing import Any, Optional
 import httpx
 from PIL import Image
 
-BRIDGE_PLUGIN_VERSION = "2.3.5"
+BRIDGE_PLUGIN_VERSION = "3.0.0"
 BRIDGE_API_VERSION = "v1"
 BRIDGE_HANDSHAKE_VERSION = "1"
 
@@ -430,6 +430,22 @@ async def get_active_diagram() -> dict[str, Any]:
 async def get_ui_selection() -> dict[str, Any]:
     """Get current selected browser elements and diagram presentation elements."""
     return await _request("GET", "/ui/selection")
+
+
+async def model_export(operation: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Capture/read/release bounded native output without interpreting its model."""
+    if operation not in {"open", "read", "release"}:
+        raise ValueError("Unsupported model export operation")
+    return await _request("POST", "/model-exports/" + operation,
+                          json_body={"schemaVersion": 1, **arguments}, timeout=35)
+
+
+async def creation_plan(operation: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Call only the typed additive-plan endpoint; never retry an uncertain apply."""
+    if operation not in {"prepare", "read", "receipt", "apply"}:
+        raise ValueError("Unsupported creation operation")
+    return await _request("POST", "/creation/" + operation,
+                          json_body={"schemaVersion": 1, **arguments}, timeout=35)
 
 
 async def probe_bridge() -> dict[str, Any]:

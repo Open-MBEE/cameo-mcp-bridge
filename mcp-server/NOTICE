@@ -1,0 +1,13 @@
+Cameo MCP Bridge
+
+This fork's contributions are licensed under the Apache License, Version 2.0.
+
+This project includes code originally distributed under the MIT License:
+Copyright (c) 2026 Cole Lyons
+
+The original MIT copyright and permission notice is reproduced verbatim in
+LICENSES/UPSTREAM-MIT.txt. Upstream portions retain their MIT terms; the Apache
+license for fork contributions does not remove or replace that grant.
+
+Third-party dependencies retain their own licenses. Cameo and its SDK are
+separately licensed and are not included in this distribution.

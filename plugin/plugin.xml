@@ -2,15 +2,16 @@
 <plugin
     id="com.claude.cameo.bridge"
     name="Cameo MCP Bridge"
-    version="2.3.5"
+    version="3.0.0"
     provider-name="Claude Code"
     class="com.claude.cameo.bridge.CameoMCPBridgePlugin">
     <requires>
         <api version="1.0"/>
+        <required-plugin id="com.nomagic.magicdraw.emfuml2xmi.v5" name="Eclipse UML2 (v5.x) XMI Export/Import" version="2024x"/>
         <required-plugin id="com.nomagic.magicdraw.diagramtable" name="Diagram Table" version="2024x"/>
         <required-plugin id="com.nomagic.magicdraw.visualization.relationshipmap" name="Relation Map" version="2024x"/>
     </requires>
     <runtime>
-        <library name="cameo-mcp-bridge-2.3.5.jar"/>
+        <library name="cameo-mcp-bridge-3.0.0.jar"/>
     </runtime>
 </plugin>

@@ -21,8 +21,9 @@ public class BridgeCapabilitiesTest {
         assertEquals("CameoMCPBridge", status.get("plugin").getAsString());
         assertEquals("Cameo MCP Bridge", status.get("pluginName").getAsString());
         assertEquals("com.claude.cameo.bridge", status.get("pluginId").getAsString());
-        assertEquals("2.3.5", status.get("version").getAsString());
-        assertEquals("2.3.5", status.get("pluginVersion").getAsString());
+        assertEquals("3.0.0", status.get("version").getAsString());
+        assertEquals("3.0.0", status.get("pluginVersion").getAsString());
+        assertEquals(status.get("pluginVersion").getAsString(), BridgeCapabilities.pluginVersion());
         assertEquals("v1", status.get("apiVersion").getAsString());
         assertEquals("1", status.get("handshakeVersion").getAsString());
         assertTrue(status.get("healthy").getAsBoolean());
@@ -30,7 +31,7 @@ public class BridgeCapabilitiesTest {
         JsonObject compatibility = status.getAsJsonObject("compatibility");
         assertNotNull(compatibility);
         assertTrue(compatibility.get("requiresExactPluginVersionMatch").getAsBoolean());
-        assertEquals("2.3.5", compatibility.get("expectedPluginVersion").getAsString());
+        assertEquals("3.0.0", compatibility.get("expectedPluginVersion").getAsString());
 
         JsonObject capabilities = status.getAsJsonObject("capabilities");
         assertNotNull(capabilities);

@@ -27,8 +27,10 @@ sourceSets {
 }
 
 dependencies {
+    compileOnly fileTree(dir: "${cameoHome}/plugins/com.nomagic.magicdraw.emfuml2xmi_v5", include: ['*_api.jar'])
     compileOnly fileTree(dir: "${cameoHome}/lib", include: ['md.jar'])
     compileOnly fileTree(dir: "${cameoHome}/lib", include: ['md_api.jar'])
+    compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.ci.persistence-*.jar'])
     compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.uml2-*.jar'])
     compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.foundation-*.jar'])
     compileOnly fileTree(dir: "${cameoHome}/lib", include: ['com.nomagic.magicdraw.core.diagram-*.jar'])
@@ -60,6 +62,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.withType(Test).configureEach {
+    systemProperty 'cameoHome', cameoHome
     if (jdk17Home) {
         executable = file("${jdk17Home}/bin/java.exe").absolutePath
     }
@@ -67,15 +70,30 @@ tasks.withType(Test).configureEach {
 
 jar {
     archiveBaseName = 'cameo-mcp-bridge'
-    archiveVersion = '2.3.5'
+    archiveVersion = '3.0.0'
     destinationDirectory = layout.buildDirectory.dir('libs')
 }
 
-tasks.register('assemblePlugin', Copy) {
+tasks.register('assemblePlugin', Sync) {
     dependsOn jar
     from('plugin.xml')
     from(jar.archiveFile)
     into(layout.buildDirectory.dir('plugin-dist/com.claude.cameo.bridge'))
+}
+
+// Resource/Plugin Manager archives require an installation descriptor and
+// paths relative to the Cameo installation root.
+tasks.register('packagePlugin', Zip) {
+    dependsOn assemblePlugin
+    archiveFileName = 'cameo-mcp-bridge-3.0.0-2024x.zip'
+    destinationDirectory = layout.buildDirectory
+    from(layout.buildDirectory.dir('plugin-dist')) {
+        into 'plugins'
+    }
+    from('resource-descriptor.xml') {
+        into 'data/resourcemanager'
+        rename { 'MDR_Plugin_Cameo_MCP_Bridge_11974001_descriptor.xml' }
+    }
 }
 
 tasks.register('deploy', Copy) {

@@ -58,6 +58,7 @@ public class ProjectHandler implements HttpHandler {
         JsonObject result = EdtDispatcher.read(project -> {
             JsonObject json = new JsonObject();
             json.addProperty("name", project.getName());
+            json.addProperty("projectId", com.claude.cameo.bridge.util.ProjectIdentity.token(project));
 
             String fileName = project.getFileName();
             json.addProperty("filePath", fileName != null ? fileName : "");

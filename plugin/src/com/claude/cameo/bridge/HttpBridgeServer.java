@@ -10,6 +10,7 @@ import com.claude.cameo.bridge.handlers.ElementQueryHandler;
 import com.claude.cameo.bridge.handlers.ExtensionProbeHandler;
 import com.claude.cameo.bridge.handlers.GenericTableHandler;
 import com.claude.cameo.bridge.handlers.ImportExportHandler;
+import com.claude.cameo.bridge.handlers.NativeModelExportHandler;
 import com.claude.cameo.bridge.handlers.MacroHandler;
 import com.claude.cameo.bridge.handlers.MatrixHandler;
 import com.claude.cameo.bridge.handlers.ProfileHandler;
@@ -28,11 +29,13 @@ import com.claude.cameo.bridge.handlers.UiStateHandler;
 import com.claude.cameo.bridge.handlers.ValidationHandler;
 import com.claude.cameo.bridge.handlers.VariantHandler;
 import com.claude.cameo.bridge.util.BridgeCapabilities;
+import com.claude.cameo.bridge.util.RequestDiagnosticsFilter;
 import com.nomagic.magicdraw.core.Application;
 import com.nomagic.magicdraw.core.Project;
 import com.nomagic.magicdraw.openapi.uml.SessionManager;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpContext;
 import com.google.gson.JsonObject;
 import javax.swing.SwingUtilities;
 import java.io.IOException;
@@ -56,22 +59,22 @@ public class HttpBridgeServer {
     }
 
     private void registerHandlers() {
-        server.createContext("/status", this::handleStatus);
-        server.createContext("/capabilities", this::handleCapabilities);
-        server.createContext("/api/v1/status", this::handleStatus);
-        server.createContext("/api/v1/capabilities", this::handleCapabilities);
-        server.createContext("/api/v1/project", new ProjectHandler());
-        server.createContext("/api/v1/ui", new UiStateHandler());
-        server.createContext("/api/v1/inspect/diagrams", new PropertyDumpHandler());
-        server.createContext("/api/v1/containment-tree", new ContainmentTreeHandler());
-        server.createContext("/api/v1/containment-tree/children", new ContainmentTreeHandler());
+        createContext("/status", this::handleStatus);
+        createContext("/capabilities", this::handleCapabilities);
+        createContext("/api/v1/status", this::handleStatus);
+        createContext("/api/v1/capabilities", this::handleCapabilities);
+        createContext("/api/v1/project", new ProjectHandler());
+        createContext("/api/v1/ui", new UiStateHandler());
+        createContext("/api/v1/inspect/diagrams", new PropertyDumpHandler());
+        createContext("/api/v1/containment-tree", new ContainmentTreeHandler());
+        createContext("/api/v1/containment-tree/children", new ContainmentTreeHandler());
 
         // Route /elements by HTTP method and sub-path
         ElementQueryHandler queryHandler = new ElementQueryHandler();
         ElementMutationHandler mutationHandler = new ElementMutationHandler();
         SpecificationHandler specificationHandler = new SpecificationHandler();
-        server.createContext("/api/v1/elements/interface-flow-properties", queryHandler);
-        server.createContext("/api/v1/elements", exchange -> {
+        createContext("/api/v1/elements/interface-flow-properties", queryHandler);
+        createContext("/api/v1/elements", exchange -> {
             String path = exchange.getRequestURI().getPath();
             // Route /specification sub-paths to SpecificationHandler (GET and PUT)
             if (path.contains("/specification")) {
@@ -83,32 +86,41 @@ public class HttpBridgeServer {
             }
         });
 
-        server.createContext("/api/v1/relationships", new RelationshipHandler());
-        server.createContext("/api/v1/diagrams", new DiagramHandler());
-        server.createContext("/api/v1/relation-maps", new RelationMapHandler());
-        server.createContext("/api/v1/snapshots", new SnapshotHandler());
-        server.createContext("/api/v1/probes", new ScriptProbeHandler());
-        server.createContext("/api/v1/validation", new ValidationHandler());
-        server.createContext("/api/v1/matrices", new MatrixHandler());
-        server.createContext("/api/v1/generic-tables", new GenericTableHandler());
+        createContext("/api/v1/relationships", new RelationshipHandler());
+        createContext("/api/v1/diagrams", new DiagramHandler());
+        createContext("/api/v1/relation-maps", new RelationMapHandler());
+        createContext("/api/v1/snapshots", new SnapshotHandler());
+        createContext("/api/v1/probes", new ScriptProbeHandler());
+        createContext("/api/v1/validation", new ValidationHandler());
+        createContext("/api/v1/matrices", new MatrixHandler());
+        createContext("/api/v1/generic-tables", new GenericTableHandler());
         AdvancedCapabilityHandler advancedCapabilityHandler = new AdvancedCapabilityHandler();
-        server.createContext("/api/v1/reports", new ReportWizardHandler());
-        server.createContext("/api/v1/import-export", new ImportExportHandler());
-        server.createContext("/api/v1/criteria", new CriteriaHandler());
-        server.createContext("/api/v1/profiles", new ProfileHandler());
-        server.createContext("/api/v1/typed-diagrams", new TypedDiagramHandler());
-        server.createContext("/api/v1/requirements", advancedCapabilityHandler);
-        server.createContext("/api/v1/simulation", new SimulationHandler());
-        server.createContext("/api/v1/teamwork", new TeamworkHandler());
-        server.createContext("/api/v1/datahub", new DataHubHandler());
-        server.createContext("/api/v1/variants", new VariantHandler());
-        server.createContext("/api/v1/extensions", new ExtensionProbeHandler());
-        server.createContext("/api/v1/macros", new MacroHandler());
-        server.createContext("/api/v1/session/reset", this::handleSessionReset);
+        createContext("/api/v1/reports", new ReportWizardHandler());
+        createContext("/api/v1/import-export", new ImportExportHandler());
+        createContext("/api/v1/model-exports", new NativeModelExportHandler());
+        createContext("/api/v1/creation", new com.claude.cameo.bridge.handlers.CreationPlanHandler());
+        createContext("/api/v1/criteria", new CriteriaHandler());
+        createContext("/api/v1/profiles", new ProfileHandler());
+        createContext("/api/v1/typed-diagrams", new TypedDiagramHandler());
+        createContext("/api/v1/requirements", advancedCapabilityHandler);
+        createContext("/api/v1/simulation", new SimulationHandler());
+        createContext("/api/v1/teamwork", new TeamworkHandler());
+        createContext("/api/v1/datahub", new DataHubHandler());
+        createContext("/api/v1/variants", new VariantHandler());
+        createContext("/api/v1/extensions", new ExtensionProbeHandler());
+        createContext("/api/v1/macros", new MacroHandler());
+        createContext("/api/v1/session/reset", this::handleSessionReset);
+        createContext("/", exchange -> sendError(exchange, 404, "NOT_FOUND", "Unknown bridge endpoint"));
     }
 
     public void start() {
         server.start();
+    }
+
+    private HttpContext createContext(String path, com.sun.net.httpserver.HttpHandler handler) {
+        HttpContext context = server.createContext(path, handler);
+        context.getFilters().add(new RequestDiagnosticsFilter());
+        return context;
     }
 
     public void stop() {

@@ -5,6 +5,9 @@ import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
 import com.claude.cameo.bridge.util.JsonHelper;
 import com.claude.cameo.bridge.util.PresentationSerializer;
+import com.claude.cameo.bridge.util.BridgeDiagnostics;
+import com.claude.cameo.bridge.util.RequestDiagnosticsFilter;
+import com.claude.cameo.bridge.util.UiSelectionValues;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.nomagic.magicdraw.core.Application;
@@ -17,8 +20,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +48,9 @@ public class UiStateHandler implements HttpHandler {
 
             Map<String, String> params = JsonHelper.parseQuery(exchange);
             boolean summaryOnly = parseBoolean(params.get("summaryOnly"), false);
-            JsonObject state = EdtDispatcher.read(project -> buildState(project, summaryOnly));
+            String requestId = exchange.getResponseHeaders().getFirst(RequestDiagnosticsFilter.REQUEST_ID_HEADER);
+            JsonObject state = EdtDispatcher.readOnEdt("Read UI selection",
+                    project -> buildState(project, summaryOnly, requestId), 30);
             if (path.endsWith("/active-diagram")) {
                 JsonObject response = new JsonObject();
                 response.add("activeDiagram", state.get("activeDiagram"));
@@ -70,7 +73,7 @@ public class UiStateHandler implements HttpHandler {
         }
     }
 
-    private JsonObject buildState(Project project, boolean summaryOnly) {
+    private JsonObject buildState(Project project, boolean summaryOnly, String requestId) {
         JsonArray warnings = new JsonArray();
         JsonObject response = new JsonObject();
         response.add("project", projectJson(project, warnings));
@@ -82,8 +85,8 @@ public class UiStateHandler implements HttpHandler {
             response.add("activeDiagram", new JsonObject());
         }
 
-        JsonArray selectedPresentations = selectedPresentations(activeDiagram, warnings);
-        JsonArray browserSelection = browserSelection(warnings);
+        JsonArray selectedPresentations = selectedPresentations(activeDiagram, warnings, requestId);
+        JsonArray browserSelection = browserSelection(warnings, requestId);
         JsonArray selectedElements = selectedElements(selectedPresentations, browserSelection);
 
         JsonObject selection = new JsonObject();
@@ -95,6 +98,9 @@ public class UiStateHandler implements HttpHandler {
         response.add("selectedPresentations", summaryOnly ? limitArray(selectedPresentations, 50) : selectedPresentations);
         response.add("browserSelection", browserSelection);
         response.add("warnings", warnings);
+        BridgeDiagnostics.log("request=" + requestId + " ui.selection browserCount=" + browserSelection.size()
+                + " presentationCount=" + selectedPresentations.size()
+                + " elementCount=" + selectedElements.size() + " warningCount=" + warnings.size());
         return response;
     }
 
@@ -147,58 +153,55 @@ public class UiStateHandler implements HttpHandler {
         return null;
     }
 
-    private JsonArray selectedPresentations(DiagramPresentationElement activeDiagram, JsonArray warnings) {
+    private JsonArray selectedPresentations(DiagramPresentationElement activeDiagram, JsonArray warnings,
+                                            String requestId) {
         JsonArray array = new JsonArray();
         if (activeDiagram == null) {
             return array;
         }
-        Object selected = firstNonNull(
-                invokeZeroArg(activeDiagram, "getSelected", warnings),
-                invokeZeroArg(activeDiagram, "getSelectedPresentationElements", warnings),
-                invokeZeroArg(activeDiagram, "getSelectedElements", warnings));
-        if (selected instanceof Collection<?>) {
-            for (Object item : (Collection<?>) selected) {
-                if (item instanceof PresentationElement) {
-                    array.add(PresentationSerializer.presentationSummary((PresentationElement) item, null));
-                }
+        Object selected = UiSelectionValues.firstSupported(activeDiagram, warnings,
+                "getSelected", "getSelectedPresentationElements", "getSelectedElements");
+        for (Object item : UiSelectionValues.items(selected)) {
+            if (item instanceof PresentationElement) {
+                array.add(PresentationSerializer.presentationSummary((PresentationElement) item, null));
+            } else if (item != null) {
+                warnings.add("Unrecognized selected presentation type: " + BridgeDiagnostics.typeOf(item));
             }
-        } else if (selected instanceof PresentationElement) {
-            array.add(PresentationSerializer.presentationSummary((PresentationElement) selected, null));
-        } else {
-            warnings.add("Selected presentation API was unavailable or returned no presentation collection");
         }
+        BridgeDiagnostics.log("request=" + requestId + " ui.diagram selectionType="
+                + BridgeDiagnostics.typeOf(selected) + " resolved=" + array.size());
         return array;
     }
 
-    private JsonArray browserSelection(JsonArray warnings) {
+    private JsonArray browserSelection(JsonArray warnings, String requestId) {
         JsonArray array = new JsonArray();
         Object app = Application.getInstance();
         Object mainFrame = invokeZeroArg(app, "getMainFrame", warnings);
         Object browser = invokeZeroArg(mainFrame, "getBrowser", warnings);
-        Object containment = firstNonNull(
-                invokeZeroArg(browser, "getContainmentTree", warnings),
-                invokeZeroArg(browser, "getActiveTree", warnings));
-        Object selected = firstNonNull(
-                invokeZeroArg(containment, "getSelectedNodes", warnings),
-                invokeZeroArg(containment, "getSelectedNode", warnings));
-        if (selected instanceof Collection<?>) {
-            for (Object node : (Collection<?>) selected) {
-                addBrowserNode(array, node);
-            }
-        } else {
-            addBrowserNode(array, selected);
+        Object containment = invokeZeroArg(browser, "getContainmentTree", warnings);
+        if (containment == null) containment = invokeZeroArg(browser, "getActiveTree", warnings);
+        Object selected = UiSelectionValues.firstSupported(containment, warnings,
+                "getSelectedNodes", "getSelectedNode");
+        for (Object node : UiSelectionValues.items(selected)) {
+            addBrowserNode(array, node, warnings);
         }
+        BridgeDiagnostics.log("request=" + requestId + " ui.browser treeType="
+                + BridgeDiagnostics.typeOf(containment) + " selectionType="
+                + BridgeDiagnostics.typeOf(selected) + " resolved=" + array.size());
         return array;
     }
 
-    private void addBrowserNode(JsonArray array, Object node) {
+    private void addBrowserNode(JsonArray array, Object node, JsonArray warnings) {
         if (node == null) {
             return;
         }
-        Object userObject = invokeZeroArg(node, "getUserObject", null);
+        Object userObject = node instanceof Element ? node : invokeZeroArg(node, "getUserObject", null);
         Object element = userObject instanceof Element ? userObject : invokeZeroArg(node, "getElement", null);
         if (element instanceof Element) {
             array.add(ElementSerializer.toJsonCompact((Element) element));
+        } else {
+            warnings.add("Selected browser node could not be resolved: nodeType="
+                    + BridgeDiagnostics.typeOf(node) + ", userObjectType=" + BridgeDiagnostics.typeOf(userObject));
         }
     }
 
@@ -241,18 +244,7 @@ public class UiStateHandler implements HttpHandler {
     }
 
     private Object invokeZeroArg(Object target, String methodName, JsonArray warnings) {
-        if (target == null) {
-            return null;
-        }
-        try {
-            Method method = target.getClass().getMethod(methodName);
-            return method.invoke(target);
-        } catch (Exception e) {
-            if (warnings != null) {
-                warnings.add(target.getClass().getName() + "." + methodName + " unavailable");
-            }
-            return null;
-        }
+        return UiSelectionValues.firstSupported(target, warnings, methodName);
     }
 
     private boolean parseBoolean(String value, boolean defaultValue) {

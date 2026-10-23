@@ -2,6 +2,9 @@ package com.claude.cameo.bridge;
 
 import com.nomagic.magicdraw.plugins.Plugin;
 import com.nomagic.magicdraw.core.Application;
+import com.claude.cameo.bridge.util.BridgeCapabilities;
+import com.claude.cameo.bridge.util.BridgeDiagnostics;
+import javax.swing.SwingUtilities;
 import java.util.logging.Logger;
 
 public class CameoMCPBridgePlugin extends Plugin {
@@ -11,6 +14,17 @@ public class CameoMCPBridgePlugin extends Plugin {
 
     @Override
     public void init() {
+        BridgeDiagnostics.setGuiSink(message -> {
+            Runnable append = () -> {
+                try {
+                    Application.getInstance().getGUILog().log(message, false);
+                } catch (RuntimeException error) {
+                    LOG.fine("Could not append bridge diagnostics to GUI log");
+                }
+            };
+            if (SwingUtilities.isEventDispatchThread()) append.run();
+            else SwingUtilities.invokeLater(append);
+        });
         int port = Integer.parseInt(System.getProperty("cameo.mcp.port", "18740"));
         try {
             server = new HttpBridgeServer(port);
@@ -18,6 +32,11 @@ public class CameoMCPBridgePlugin extends Plugin {
             Application.getInstance().getGUILog().log(
                 "CameoMCPBridge: HTTP server started on port " + port);
             LOG.info("CameoMCPBridge: HTTP server started on port " + port);
+            BridgeDiagnostics.log("plugin=" + BridgeCapabilities.pluginVersion()
+                    + " api=" + BridgeCapabilities.API_VERSION
+                    + " diagnostics=" + BridgeDiagnostics.enabled()
+                    + " java=" + System.getProperty("java.version")
+                    + " (diagnostic records omit request bodies and model contents)");
         } catch (Exception e) {
             LOG.severe("CameoMCPBridge: Failed to start HTTP server: " + e.getMessage());
             Application.getInstance().getGUILog().showError(
@@ -31,6 +50,7 @@ public class CameoMCPBridgePlugin extends Plugin {
             server.stop();
             LOG.info("CameoMCPBridge: HTTP server stopped");
         }
+        BridgeDiagnostics.setGuiSink(null);
         return true;
     }
 

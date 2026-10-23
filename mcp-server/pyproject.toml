@@ -1,19 +1,20 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cameo-mcp-server"
-version = "2.3.5"
+version = "3.0.0"
 description = "MCP server bridging AI assistants to CATIA Magic / Cameo Systems Modeler"
 requires-python = ">=3.10"
-license = "MIT"
+license = "Apache-2.0 AND MIT"
+license-files = ["LICENSE", "NOTICE", "LICENSES/*.txt"]
 authors = [
     { name = "Cole Lyons" },
 ]
 keywords = ["mcp", "cameo", "catia-magic", "sysml", "uml", "mbse"]
 dependencies = [
-    "mcp>=1.0.0",
+    "mcp>=1.0.0,<2",
     "httpx>=0.25.0",
     "Pillow>=10.0.0",
     "python-pptx>=1.0.2",

@@ -1,5 +1,11 @@
 # Cameo MCP Bridge
 
+Version **3.0.0** exposes native model export resources and guarded structural
+creation. It keeps Cameo SDK access, model consistency and transaction ownership
+in this plugin; consumers own interpretation and transformation of exported data.
+See [native export](docs/development/native-model-export.md) and
+[guarded change plans](docs/development/change-plans.md).
+
 An [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server that connects AI coding assistants to **CATIA Magic / Cameo Systems Modeler** -- the industry-standard MBSE tool for SysML and UML modeling.
 
 This lets Claude Code (or any MCP-compatible client) **query, create, modify, inspect, validate, and visualize** SysML/UML models inside a running Cameo instance through 162 tools covering capability negotiation, methodology-aware OOSEM workflows, semantic validation, state-machine semantics, elements, relationships, native matrices and tables, Relation Maps, reports, requirements import/export, validation suites, Teamwork/DataHub probes, diagrams, reusable verification, specifications, and guarded macro execution.
@@ -113,6 +119,12 @@ cd plugin
 
 Gradle must run on a Java 17 JDK. You can also set `JDK17_HOME` or `JAVA17_HOME` instead of passing `-Pjdk17Home=...`.
 
+For a ZIP that can be imported through Cameo's Resource/Plugin Manager, run
+`./gradlew packagePlugin` with the same `cameoHome` and `jdk17Home` properties.
+The archive is `plugin/build/cameo-mcp-bridge-2.4.0-2024x.zip` (relative to the
+repository root). It contains the resource installation descriptor and the
+`plugins/` directory structure required by the installer.
+
 **2. Deploy to Cameo:**
 
 Copy the contents of `plugin/build/plugin-dist/com.claude.cameo.bridge/` to:
@@ -161,6 +173,18 @@ The Python MCP layer also ships a Phase 2 methodology surface for bounded
 OOSEM workflows. These tools build named artifact recipes, workflow guidance,
 conformance checks, semantic validation, and compact review packets on top of
 the low-level bridge.
+
+## What's New In 2.3.6
+
+- Request diagnostics in Cameo's log: correlation ID, route, response status and elapsed time.
+- Selection diagnostics include Java result types, resolved counts and warning counts.
+- Cameo 2024x tree selection arrays are now handled; UI state reads run on the EDT without a model session.
+- Supported selection accessors are tried lazily, avoiding warnings from unused fallback APIs.
+- Python and plugin compatibility versions move together to 2.3.6.
+
+Diagnostics are enabled by default. To silence them, add `-Dcameo.mcp.diagnostics=false`
+to Cameo's VM options. To keep Java log records but suppress their GUI-log mirror,
+use `-Dcameo.mcp.diagnostics.gui=false`. See [diagnostic testing](docs/development/diagnostics.md).
 
 ## What's New In 2.3.5
 
@@ -608,6 +632,13 @@ cameo-mcp-bridge/
 ```
 
 ## Development
+
+### Native model export and guarded changes
+
+The bridge serves consumer-neutral native export bundles and typed creation plans.
+It does not perform language conversion or consumer workspace orchestration.
+Read the [export contract](docs/development/native-model-export.md) and
+[change-plan contract](docs/development/change-plans.md).
 
 ### Building the Plugin
 

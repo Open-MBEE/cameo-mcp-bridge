@@ -15,8 +15,11 @@ public final class BridgeCapabilities {
 
     public static final String PLUGIN_ID = "com.claude.cameo.bridge";
     public static final String PLUGIN_NAME = "Cameo MCP Bridge";
-    public static final String PLUGIN_VERSION = "2.3.5";
+    private static final String RELEASE_VERSION = "3.0.0";
+    public static final String PLUGIN_VERSION = pluginVersion();
     public static final String API_VERSION = "v1";
+    /** Runtime accessor for callers retained across incremental builds; avoids constant inlining. */
+    public static String pluginVersion() { return RELEASE_VERSION; }
     public static final String HANDSHAKE_VERSION = "1";
     public static final String LEGACY_STATUS_PATH = "/status";
     public static final String LEGACY_CAPABILITIES_PATH = "/capabilities";
@@ -24,6 +27,13 @@ public final class BridgeCapabilities {
     public static final String CAPABILITIES_PATH = "/api/v1/capabilities";
 
     private static final List<Capability> CAPABILITIES = List.of(
+            new Capability("creation", "cameo_prepare_creation", "POST", "/api/v1/creation/prepare", "read"),
+            new Capability("creation", "cameo_read_creation", "POST", "/api/v1/creation/read", "read"),
+            new Capability("creation", "cameo_creation_receipt", "POST", "/api/v1/creation/receipt", "read"),
+            new Capability("creation", "cameo_apply_creation", "POST", "/api/v1/creation/apply", "write"),
+            new Capability("modelExport", "cameo_open_model_export", "POST", "/api/v1/model-exports/open", "read"),
+            new Capability("modelExport", "cameo_read_model_export", "POST", "/api/v1/model-exports/read", "read"),
+            new Capability("modelExport", "cameo_release_model_export", "POST", "/api/v1/model-exports/release", "read"),
             new Capability("health", "cameo_status", "GET", STATUS_PATH, "read"),
             new Capability("health", "cameo_capabilities", "GET", CAPABILITIES_PATH, "read"),
             new Capability("project", "cameo_get_project", "GET", "/api/v1/project", "read"),
@@ -200,6 +210,25 @@ public final class BridgeCapabilities {
         json.addProperty("apiVersion", API_VERSION);
         json.addProperty("handshakeVersion", HANDSHAKE_VERSION);
         json.addProperty("port", port);
+        JsonObject creationPlans = new JsonObject();
+        creationPlans.addProperty("schemaVersion", 1);
+        creationPlans.addProperty("maxOperations", 100);
+        creationPlans.addProperty("expiresAfterSeconds", 600);
+        creationPlans.addProperty("allowedKinds", "package, block, property");
+        creationPlans.addProperty("requiresExplicitApproval", true);
+        creationPlans.addProperty("savesProject", false);
+        creationPlans.addProperty("qualification", "experimental; disposable live-project qualification required");
+        json.add("creationPlans", creationPlans);
+        JsonObject modelExport = new JsonObject();
+        modelExport.addProperty("schemaVersion", 1);
+        modelExport.addProperty("format", "native Eclipse UML2 v5 project output and installed resource bytes");
+        modelExport.addProperty("maxRoots", 20);
+        modelExport.addProperty("maxPrimarySnapshotObjects", 5000);
+        modelExport.addProperty("maxCaptureBytes", NativeExportStore.MAX_BYTES);
+        modelExport.addProperty("maxChunkBytes", NativeExportStore.CHUNK_BYTES);
+        modelExport.addProperty("expiresAfterSeconds", 300);
+        modelExport.addProperty("selectionPolicy", "root IDs are metadata; consumers interpret and filter the native project output");
+        json.add("modelExport", modelExport);
         json.addProperty("statusEndpoint", STATUS_PATH);
         JsonArray statusAliases = new JsonArray();
         statusAliases.add(LEGACY_STATUS_PATH);

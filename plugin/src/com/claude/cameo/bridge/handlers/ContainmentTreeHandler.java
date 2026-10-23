@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -266,7 +267,7 @@ public class ContainmentTreeHandler implements HttpHandler {
             List<Stereotype> stereotypes = StereotypesHelper.getStereotypes(element);
             if (stereotypes != null) {
                 for (Stereotype st : stereotypes) {
-                    stereotypesArray.add(st.getName());
+                    stereotypesArray.add(JsonCompat.string(st.getName()));
                 }
             }
         } catch (Exception e) {

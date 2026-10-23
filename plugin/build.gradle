@@ -2,6 +2,15 @@ plugins {
     id 'java'
 }
 
+def cameoTarget = providers.gradleProperty('cameoTarget').getOrElse('2024x')
+if (!(cameoTarget in ['2022x', '2024x'])) {
+    throw new GradleException('cameoTarget must be 2022x or 2024x')
+}
+def javaRelease = cameoTarget == '2022x' ? 11 : 17
+layout.buildDirectory = layout.projectDirectory.dir("build/${cameoTarget}")
+def windows = System.getProperty('os.name').toLowerCase().contains('windows')
+def javaBinary = windows ? 'java.exe' : 'java'
+
 def cameoHome = project.hasProperty('cameoHome')
     ? project.property('cameoHome')
     : 'D:/DevTools/CatiaMagic'
@@ -10,8 +19,32 @@ def jdk17Home = project.hasProperty('jdk17Home')
     ? project.property('jdk17Home')
     : (System.getenv('JDK17_HOME') ?: System.getenv('JAVA17_HOME'))
 
-sourceCompatibility = '17'
-targetCompatibility = '17'
+java {
+    sourceCompatibility = JavaVersion.toVersion(javaRelease)
+    targetCompatibility = JavaVersion.toVersion(javaRelease)
+}
+
+repositories { mavenCentral() }
+
+def validateSdk = tasks.register('validateSdk') {
+    inputs.property('cameoTarget', cameoTarget)
+    doLast {
+        ['lib/md.jar', 'lib/md_api.jar', 'lib/junit-4.13.2.jar',
+         'plugins/com.nomagic.magicdraw.dependencymatrix/dependencymatrix_api.jar',
+         'plugins/com.nomagic.magicdraw.diagramtable/diagramtable_api.jar',
+         'plugins/com.nomagic.magicdraw.relationshipmap/relationshipmap_api.jar'].each {
+            if (!file("${cameoHome}/${it}").isFile()) throw new GradleException("Missing SDK dependency: ${cameoHome}/${it}")
+        }
+        ['com.nomagic.magicdraw.emfuml2xmi_v5', 'com.nomagic.magicdraw.diagramtable',
+         'com.nomagic.magicdraw.relationshipmap'].each {
+            def descriptor = file("${cameoHome}/plugins/${it}/plugin.xml")
+            if (!descriptor.isFile() || !(descriptor.text =~ /(?s)<plugin\b[^>]*\bversion=["']${cameoTarget}(?: [^"']*)?["']/).find()) {
+                throw new GradleException("SDK plugin ${it} does not match target ${cameoTarget}: ${descriptor}")
+            }
+        }
+    }
+}
+
 
 sourceSets {
     main {
@@ -49,7 +82,7 @@ dependencies {
 
     testImplementation files("${cameoHome}/lib/junit-4.13.2.jar")
     testImplementation fileTree(dir: "${cameoHome}/lib", include: ['gson-*.jar'])
-    testRuntimeOnly files(new File(gradle.gradleHomeDir, 'lib/hamcrest-core-1.3.jar'))
+    testRuntimeOnly 'org.hamcrest:hamcrest-core:1.3'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -58,13 +91,20 @@ tasks.withType(JavaCompile).configureEach {
         options.fork = true
         options.forkOptions.javaHome = file(jdk17Home)
     }
-    options.release = 17
+    dependsOn validateSdk
+    options.release = javaRelease
 }
 
 tasks.withType(Test).configureEach {
+    useJUnit()
     systemProperty 'cameoHome', cameoHome
-    if (jdk17Home) {
-        executable = file("${jdk17Home}/bin/java.exe").absolutePath
+    systemProperty 'expectedCameoTarget', cameoTarget
+    def testJavaHome = project.findProperty('testJavaHome') ?: (cameoTarget == '2022x' ? "${cameoHome}/jre" : jdk17Home)
+    if (testJavaHome) executable = file("${testJavaHome}/bin/${javaBinary}").absolutePath
+    doFirst {
+        if (cameoTarget == '2022x' && !file(executable).isFile()) {
+            throw new GradleException('2022x tests require Java 11; supply -PtestJavaHome=/path/to/java11')
+        }
     }
 }
 
@@ -74,9 +114,31 @@ jar {
     destinationDirectory = layout.buildDirectory.dir('libs')
 }
 
+def generatedMetadata = layout.buildDirectory.dir('generated-metadata')
+def generatedResources = layout.buildDirectory.dir('generated-resources')
+def generateMetadata = tasks.register('generateMetadata') {
+    inputs.files('plugin.xml', 'resource-descriptor.xml')
+    inputs.property('cameoTarget', cameoTarget)
+    outputs.dir(generatedMetadata)
+    outputs.dir(generatedResources)
+    doLast {
+        def metadata = generatedMetadata.get().asFile
+        def resources = generatedResources.get().asFile
+        metadata.mkdirs(); resources.mkdirs()
+        new File(metadata, 'plugin.xml').text = file('plugin.xml').text.replace('version="2024x"', 'version="' + cameoTarget + '"')
+        new File(metadata, 'resource-descriptor.xml').text = file('resource-descriptor.xml').text
+            .replace('mdVersionMin="2024x"', 'mdVersionMin="' + cameoTarget + '"')
+            .replace('mdVersionMax="higher"', cameoTarget == '2022x' ? 'mdVersionMax="2022x"' : 'mdVersionMax="higher"')
+        new File(resources, 'cameo-bridge-build.properties').text = "cameoTarget=${cameoTarget}\njavaRelease=${javaRelease}\n"
+    }
+}
+sourceSets.main.resources.srcDir(generatedResources)
+tasks.named('processResources') { dependsOn generateMetadata }
+
 tasks.register('assemblePlugin', Sync) {
     dependsOn jar
-    from('plugin.xml')
+    dependsOn generateMetadata
+    from(generatedMetadata.map { it.file('plugin.xml') })
     from(jar.archiveFile)
     into(layout.buildDirectory.dir('plugin-dist/com.claude.cameo.bridge'))
 }
@@ -85,15 +147,27 @@ tasks.register('assemblePlugin', Sync) {
 // paths relative to the Cameo installation root.
 tasks.register('packagePlugin', Zip) {
     dependsOn assemblePlugin
-    archiveFileName = 'cameo-mcp-bridge-3.1.0-2024x.zip'
+    archiveFileName = "cameo-mcp-bridge-3.1.0-${cameoTarget}.zip"
     destinationDirectory = layout.buildDirectory
     from(layout.buildDirectory.dir('plugin-dist')) {
         into 'plugins'
     }
-    from('resource-descriptor.xml') {
+    from(generatedMetadata.map { it.file('resource-descriptor.xml') }) {
         into 'data/resourcemanager'
         rename { 'MDR_Plugin_Cameo_MCP_Bridge_11974001_descriptor.xml' }
     }
+}
+
+// Resolves API signatures only; does not initialize Cameo, install, or open models.
+tasks.register('sdkLinkageSmoke', JavaExec) {
+    dependsOn jar, testClasses
+    classpath = sourceSets.test.runtimeClasspath + sourceSets.main.compileClasspath +
+        fileTree(dir: "${cameoHome}/lib", include: ['*.jar']) +
+        fileTree(dir: "${cameoHome}/plugins/com.nomagic.magicdraw.diagramtable", include: ['*.jar'])
+    mainClass = 'com.claude.cameo.bridge.util.SdkLinkageProbe'
+    def testJavaHome = project.findProperty('testJavaHome') ?: (cameoTarget == '2022x' ? "${cameoHome}/jre" : jdk17Home)
+    if (testJavaHome) executable = file("${testJavaHome}/bin/${javaBinary}").absolutePath
+    doFirst { args = [jar.archiveFile.get().asFile.absolutePath, javaRelease.toString()] }
 }
 
 tasks.register('deploy', Copy) {

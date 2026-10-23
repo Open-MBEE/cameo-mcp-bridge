@@ -55,12 +55,12 @@ public final class OptionalCapabilitySupport {
                 detail.addProperty("found", true);
                 detail.addProperty("loadedName", cls.getName());
                 detail.addProperty("codeSource", codeSource(cls));
-                found.add(className);
+                found.add(JsonCompat.string(className));
             } catch (ClassNotFoundException | LinkageError | SecurityException e) {
                 detail.addProperty("found", false);
                 detail.addProperty("errorType", e.getClass().getName());
                 detail.addProperty("message", safe(e.getMessage()));
-                missing.add(className);
+                missing.add(JsonCompat.string(className));
             }
             details.add(detail);
         }

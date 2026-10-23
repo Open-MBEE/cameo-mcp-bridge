@@ -7,7 +7,18 @@ import java.util.function.Function;
 public final class PrimaryModelTraversal {
     private PrimaryModelTraversal() {}
     public enum Ownership { PRIMARY, ATTACHED, UNKNOWN }
-    public record Result<T>(List<T> objects, List<T> attached, int encounters, int repeated) {}
+    public static final class Result<T> {
+        private final List<T> objects, attached;
+        private final int encounters, repeated;
+        public Result(List<T> objects, List<T> attached, int encounters, int repeated) {
+            this.objects=List.copyOf(objects); this.attached=List.copyOf(attached);
+            this.encounters=encounters; this.repeated=repeated;
+        }
+        public List<T> objects() { return objects; }
+        public List<T> attached() { return attached; }
+        public int encounters() { return encounters; }
+        public int repeated() { return repeated; }
+    }
 
     public static <T> Result<T> collect(T root, Function<T, Ownership> ownership,
             Function<T, Iterator<T>> children, int maxObjects, int maxEncounters, long budgetNanos) {

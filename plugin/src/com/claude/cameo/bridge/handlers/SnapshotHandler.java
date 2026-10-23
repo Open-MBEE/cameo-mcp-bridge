@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -182,7 +183,7 @@ public class SnapshotHandler implements HttpHandler {
                             PropertySerializer.serializeManager(dpe.getPropertyManager(), includeRaw, true));
                 } catch (Exception e) {
                     JsonArray warnings = new JsonArray();
-                    warnings.add("Could not read diagram property manager: " + e.getMessage());
+                    warnings.add(JsonCompat.string("Could not read diagram property manager: " + e.getMessage()));
                     json.add("warnings", warnings);
                 }
             }
@@ -219,7 +220,7 @@ public class SnapshotHandler implements HttpHandler {
         JsonArray criteria = new JsonArray();
         if (settings.getDependencyCriterion() != null) {
             for (String criterion : settings.getDependencyCriterion()) {
-                criteria.add(criterion);
+                criteria.add(JsonCompat.string(criterion));
             }
         }
         json.add("dependencyCriteria", criteria);

@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
 public class CameoCreationPlansTest {
     @Rule public TemporaryFolder folder=new TemporaryFolder();
     private JsonObject spec() {
-        return JsonParser.parseString("{\"schemaVersion\":1,\"projectId\":\"session\",\"targetPackageId\":\"target\",\"operations\":[{\"id\":\"pump\",\"kind\":\"block\",\"name\":\"Pump\",\"owner\":\"$target\"},{\"id\":\"backup\",\"kind\":\"property\",\"name\":\"backup\",\"owner\":\"@pump\",\"type\":\"@pump\",\"upper\":-1}]}").getAsJsonObject();
+        return new JsonParser().parse("{\"schemaVersion\":1,\"projectId\":\"session\",\"targetPackageId\":\"target\",\"operations\":[{\"id\":\"pump\",\"kind\":\"block\",\"name\":\"Pump\",\"owner\":\"$target\"},{\"id\":\"backup\",\"kind\":\"property\",\"name\":\"backup\",\"owner\":\"@pump\",\"type\":\"@pump\",\"upper\":-1}]}").getAsJsonObject();
     }
     private static class Model implements CameoCreationPlans.Backend {
         int elements,begins,commits,rollbacks; boolean failCreate,failCommit,failRollback,existingSession; String fingerprint="before";
@@ -70,7 +70,7 @@ public class CameoCreationPlansTest {
         assertThrows(IllegalStateException.class,()->store.apply(id(plan),hash(plan),model)); assertEquals(0,model.begins);
     }
     @Test public void targetAliasesCannotCreateDuplicateSiblings() {
-        var raw=spec(); var duplicate=raw.getAsJsonArray("operations").get(0).deepCopy().getAsJsonObject();
+        var raw=spec(); var duplicate=JsonCompat.copy(raw.getAsJsonArray("operations").get(0)).getAsJsonObject();
         duplicate.addProperty("id","different"); duplicate.addProperty("owner","target"); raw.getAsJsonArray("operations").add(duplicate);
         assertThrows(IllegalArgumentException.class,()->CameoCreationPlans.specification(raw));
     }

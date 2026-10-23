@@ -79,10 +79,10 @@ All write operations are session-wrapped for undo/redo support. Read operations 
 
 ## Prerequisites
 
-- **CATIA Magic / Cameo Systems Modeler** 2024x or newer (any bundle: Systems of Systems Architect, Cyber Systems Engineer, etc.)
+- **CATIA Magic / Cameo Systems Modeler** 2024x or newer (2022x build available for experimental qualification) (any bundle: Systems of Systems Architect, Cyber Systems Engineer, etc.)
 - **Java 17 JDK** available to Gradle
 - **Python 3.10+** with `pip`
-- **Gradle 8.x** (wrapper included)
+- **Gradle** (wrapper included; Gradle 8.5 and the configured 9.7.1 build supported)
 
 ## Installation
 
@@ -121,7 +121,7 @@ Gradle must run on a Java 17 JDK. You can also set `JDK17_HOME` or `JAVA17_HOME`
 
 For a ZIP that can be imported through Cameo's Resource/Plugin Manager, run
 `./gradlew packagePlugin` with the same `cameoHome` and `jdk17Home` properties.
-The archive is `plugin/build/cameo-mcp-bridge-3.1.0-2024x.zip` (relative to the
+The archive is `plugin/build/2024x/cameo-mcp-bridge-3.1.0-2024x.zip` (relative to the
 repository root). It contains the resource installation descriptor and the
 `plugins/` directory structure required by the installer.
 
@@ -130,7 +130,7 @@ for Windows commands, archive verification, and GitHub release publishing.
 
 **2. Deploy to Cameo:**
 
-Copy the contents of `plugin/build/plugin-dist/com.claude.cameo.bridge/` to:
+Copy the contents of `plugin/build/2024x/plugin-dist/com.claude.cameo.bridge/` to:
 ```
 <CAMEO_HOME>/plugins/com.claude.cameo.bridge/
 ```
@@ -655,12 +655,12 @@ cd plugin
 ./gradlew assemblePlugin -PcameoHome="/path/to/CatiaMagic"
 ```
 
-The output goes to `plugin/build/plugin-dist/com.claude.cameo.bridge/`.
+The output goes to `plugin/build/2024x/plugin-dist/com.claude.cameo.bridge/`.
 
 For a downloadable 2024x ZIP and GitHub release, follow the
-[plugin release guide](docs/development/plugin-releases.md). Additional 2022x
-support is proposed in the [compatibility plan](docs/plans/2022x-plugin-support.md);
-the published 2024x build remains the supported baseline.
+[plugin release guide](docs/development/plugin-releases.md). An additional experimental 2022x target is available; see the
+[2022x build instructions and qualification status](docs/development/plugin-releases.md#additional-2022x-build).
+The default target remains 2024x.
 
 ### Running the MCP Server Standalone
 

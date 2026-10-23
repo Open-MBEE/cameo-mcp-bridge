@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.CompartmentAliasResolver;
 import com.claude.cameo.bridge.util.EdtDispatcher;
@@ -422,7 +423,8 @@ public class DiagramHandler implements HttpHandler {
 
     private Element resolveElement(Project project, String elementId, String label) {
         Object element = project.getElementByID(elementId);
-        if (element instanceof Element resolved) {
+        if (element instanceof Element) {
+            Element resolved = (Element) element;
             return resolved;
         }
         throw new IllegalArgumentException(label + " not found: " + elementId);
@@ -1575,7 +1577,7 @@ public class DiagramHandler implements HttpHandler {
                 entry.addProperty("repairMode", "path-decorations");
                 JsonArray requestedTypes = new JsonArray();
                 for (String shapeType : effectiveDropShapeTypes) {
-                    requestedTypes.add(shapeType);
+                    requestedTypes.add(JsonCompat.string(shapeType));
                 }
                 entry.add("dropChildShapeTypes", requestedTypes);
 
@@ -1690,7 +1692,7 @@ public class DiagramHandler implements HttpHandler {
             response.addProperty("dryRun", dryRun);
             JsonArray dropTypes = new JsonArray();
             for (String shapeType : effectiveDropShapeTypes) {
-                dropTypes.add(shapeType);
+                dropTypes.add(JsonCompat.string(shapeType));
             }
             response.add("dropChildShapeTypes", dropTypes);
             response.addProperty("resultCount", results.size());
@@ -2226,9 +2228,9 @@ public class DiagramHandler implements HttpHandler {
             }
             String request = entry.get("request").getAsString();
             if (entry.has("set") && entry.get("set").getAsBoolean()) {
-                supportedRequests.add(request);
+                supportedRequests.add(JsonCompat.string(request));
             } else if (entry.has("error")) {
-                unsupportedRequests.add(request);
+                unsupportedRequests.add(JsonCompat.string(request));
             }
         }
 
@@ -2242,7 +2244,7 @@ public class DiagramHandler implements HttpHandler {
                     pem.setPresentationElementProperties(target, pm);
                     propertyChangesApplied = true;
                 } catch (Exception e) {
-                    errors.add("Failed to apply presentation properties: " + safeMessage(e));
+                    errors.add(JsonCompat.string("Failed to apply presentation properties: " + safeMessage(e)));
                 }
             }
         }
@@ -2251,7 +2253,7 @@ public class DiagramHandler implements HttpHandler {
                 pem.resetLabelPositions((PathElement) target);
                 labelsReset = true;
             } catch (Exception e) {
-                errors.add("Failed to reset label positions: " + safeMessage(e));
+                errors.add(JsonCompat.string("Failed to reset label positions: " + safeMessage(e)));
             }
         }
 
@@ -2810,7 +2812,7 @@ public class DiagramHandler implements HttpHandler {
     private static JsonArray toJsonArray(List<String> values) {
         JsonArray array = new JsonArray();
         for (String value : values) {
-            array.add(value);
+            array.add(JsonCompat.string(value));
         }
         return array;
     }

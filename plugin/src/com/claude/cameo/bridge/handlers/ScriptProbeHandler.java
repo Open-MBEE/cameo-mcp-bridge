@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.JsonHelper;
@@ -183,9 +184,9 @@ public class ScriptProbeHandler implements HttpHandler {
             response.add("methods", methods(PresentationElement.class));
         } else if ("ui.dumpSelectionApi".equals(template)) {
             JsonArray classes = new JsonArray();
-            classes.add(com.nomagic.magicdraw.core.Application.class.getName());
-            classes.add(Project.class.getName());
-            classes.add(DiagramPresentationElement.class.getName());
+            classes.add(JsonCompat.string(com.nomagic.magicdraw.core.Application.class.getName()));
+            classes.add(JsonCompat.string(Project.class.getName()));
+            classes.add(JsonCompat.string(DiagramPresentationElement.class.getName()));
             response.add("candidateClasses", classes);
             response.add("applicationMethods", methods(com.nomagic.magicdraw.core.Application.class));
             response.add("projectMethods", methods(Project.class));
@@ -240,7 +241,7 @@ public class ScriptProbeHandler implements HttpHandler {
                 entry.addProperty("diagramName", dpe.getName());
                 JsonArray classes = new JsonArray();
                 for (PresentationElement pe : com.claude.cameo.bridge.util.PresentationSerializer.flatten(dpe, null)) {
-                    classes.add(pe.getClass().getName());
+                    classes.add(JsonCompat.string(pe.getClass().getName()));
                 }
                 entry.addProperty("count", classes.size());
                 entry.add("classes", classes);
@@ -260,7 +261,7 @@ public class ScriptProbeHandler implements HttpHandler {
             entry.addProperty("static", Modifier.isStatic(method.getModifiers()));
             JsonArray params = new JsonArray();
             for (Class<?> param : method.getParameterTypes()) {
-                params.add(param.getName());
+                params.add(JsonCompat.string(param.getName()));
             }
             entry.add("parameterTypes", params);
             array.add(entry);

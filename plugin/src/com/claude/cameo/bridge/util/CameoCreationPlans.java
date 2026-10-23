@@ -21,7 +21,7 @@ public final class CameoCreationPlans {
     private final Path directory;
     public CameoCreationPlans(Path directory) { this.directory=directory.toAbsolutePath().normalize(); }
     public static void keys(JsonObject object, String... allowed) {
-        if(!Set.of(allowed).containsAll(object.keySet())) throw new IllegalArgumentException("Unknown creation-plan field");
+        if(!Set.of(allowed).containsAll(JsonCompat.keys(object))) throw new IllegalArgumentException("Unknown creation-plan field");
     }
     public static String text(JsonObject object,String name) {
         JsonElement value=object.get(name);
@@ -43,7 +43,7 @@ public final class CameoCreationPlans {
         JsonObject out=new JsonObject(); out.addProperty("schemaVersion",1);
         out.addProperty("projectId",text(raw,"projectId")); out.addProperty("targetPackageId",text(raw,"targetPackageId"));
         JsonArray operations=raw.getAsJsonArray("operations");
-        if(operations==null || operations.isEmpty() || operations.size()>100) throw new IllegalArgumentException("Choose 1 to 100 operations");
+        if(operations==null || operations.size()==0 || operations.size()>100) throw new IllegalArgumentException("Choose 1 to 100 operations");
         Map<String,String> previous=new LinkedHashMap<>(); Set<String> names=new HashSet<>(); JsonArray normalized=new JsonArray();
         for(JsonElement value:operations) {
             JsonObject op=value.getAsJsonObject(); keys(op,"id","kind","name","owner","type","lower","upper","aggregation");
@@ -73,7 +73,7 @@ public final class CameoCreationPlans {
         return out;
     }
     public static String hash(JsonObject value) throws Exception {
-        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toString().getBytes(StandardCharsets.UTF_8)));
+        return Hex.format(MessageDigest.getInstance("SHA-256").digest(value.toString().getBytes(StandardCharsets.UTF_8)));
     }
     public JsonObject prepare(JsonObject raw,Backend backend) throws Exception {
         JsonObject spec=specification(raw),context=backend.inspect(spec);
@@ -90,7 +90,7 @@ public final class CameoCreationPlans {
         return directory.resolve(id+"."+suffix+".json");
     }
     public JsonObject read(String id,String expectedHash) throws Exception {
-        JsonObject plan=readFile(path(id,"plan")),unhashed=plan.deepCopy(); unhashed.remove("planHash");
+        JsonObject plan=readFile(path(id,"plan")),unhashed=JsonCompat.copy(plan); unhashed.remove("planHash");
         if(!hash(unhashed).equals(expectedHash) || !text(plan,"planHash").equals(expectedHash)) throw new IllegalArgumentException("Creation plan hash mismatch");
         return plan;
     }
@@ -129,7 +129,7 @@ public final class CameoCreationPlans {
         try(var in=Files.newInputStream(path)) {
             byte[] bytes=in.readNBytes(256*1024+1);
             if(bytes.length>256*1024) throw new IllegalArgumentException("Plan receipt exceeds byte bound");
-            return JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
+            return new JsonParser().parse(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
         }
     }
     private static void write(Path path,JsonObject value,boolean fresh) throws Exception {

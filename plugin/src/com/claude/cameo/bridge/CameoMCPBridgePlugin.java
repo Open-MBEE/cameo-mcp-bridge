@@ -5,6 +5,7 @@ import com.nomagic.magicdraw.core.Application;
 import com.claude.cameo.bridge.util.BridgeCapabilities;
 import com.claude.cameo.bridge.util.BridgeDiagnostics;
 import com.claude.cameo.bridge.util.BridgePort;
+import com.claude.cameo.bridge.util.BridgePlatform;
 import javax.swing.SwingUtilities;
 import java.util.logging.Logger;
 
@@ -27,6 +28,13 @@ public class CameoMCPBridgePlugin extends Plugin {
             else SwingUtilities.invokeLater(append);
         });
         try {
+            if ("2022x".equals(BridgePlatform.target())) {
+                String hostVersion = com.nomagic.magicdraw.emfuml2xmi.v5.EmfUml2XmiPlugin
+                        .getInstance().getDescriptor().getVersion();
+                if (!BridgePlatform.acceptsHost(hostVersion)) {
+                    throw new IllegalStateException("The 2022x bridge build requires a 2022x host; found " + hostVersion);
+                }
+            }
             BridgeOptions options = new BridgeOptions();
             Application.getInstance().getEnvironmentOptions().addGroup(options);
             BridgeDiagnostics.log("Registered Cameo MCP Bridge Environment Options (plugin "
@@ -38,6 +46,7 @@ public class CameoMCPBridgePlugin extends Plugin {
                 "CameoMCPBridge: HTTP server started on port " + port);
             LOG.info("CameoMCPBridge: HTTP server started on port " + port);
             BridgeDiagnostics.log("plugin=" + BridgeCapabilities.pluginVersion()
+                    + " target=" + BridgePlatform.target()
                     + " api=" + BridgeCapabilities.API_VERSION
                     + " diagnostics=" + BridgeDiagnostics.enabled()
                     + " java=" + System.getProperty("java.version")

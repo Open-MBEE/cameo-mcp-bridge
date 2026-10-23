@@ -40,8 +40,8 @@ public final class UiSelectionValues {
                         && ((InvocationTargetException) error).getCause() != null
                         ? ((InvocationTargetException) error).getCause().getClass().getSimpleName()
                         : error.getClass().getSimpleName();
-                if (warnings != null) warnings.add(target.getClass().getName() + "." + methodName
-                        + " unavailable (" + kind + ")");
+                if (warnings != null) warnings.add(JsonCompat.string(target.getClass().getName() + "." + methodName
+                        + " unavailable (" + kind + ")"));
                 // Failure class is useful; exception messages may contain model content.
                 LOG.log(Level.FINE, "UI accessor {0}.{1} unavailable ({2})",
                         new Object[]{target.getClass().getName(), methodName, kind});

@@ -31,7 +31,7 @@ public class JsonHelper {
      */
     public static JsonObject parseBody(HttpExchange exchange) throws IOException {
         try (Reader reader = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8)) {
-            return JsonParser.parseReader(reader).getAsJsonObject();
+            return new JsonParser().parse(reader).getAsJsonObject();
         }
     }
 

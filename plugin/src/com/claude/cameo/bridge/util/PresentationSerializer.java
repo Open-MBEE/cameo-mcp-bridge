@@ -93,7 +93,7 @@ public final class PresentationSerializer {
             json.add("propertyManager", PropertySerializer.serializeManager(manager, includeRaw, summaryOnly));
         } catch (Exception e) {
             JsonArray warnings = new JsonArray();
-            warnings.add("Could not read presentation property manager: " + e.getMessage());
+            warnings.add(JsonCompat.string("Could not read presentation property manager: " + e.getMessage()));
             json.add("warnings", warnings);
         }
         JsonArray children = new JsonArray();

@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.JsonHelper;
 import com.nomagic.magicdraw.core.Application;
@@ -90,7 +91,7 @@ public class MacroHandler implements HttpHandler {
 
             com.google.gson.JsonArray names = new com.google.gson.JsonArray();
             for (String n : factory.getNames()) {
-                names.add(n);
+                names.add(JsonCompat.string(n));
             }
             engineJson.add("aliases", names);
 

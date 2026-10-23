@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.JsonHelper;
@@ -75,11 +76,11 @@ public class TeamworkHandler implements HttpHandler {
         response.addProperty("descriptorReadSupported", true);
         response.addProperty("branchHistoryLockReadSupported", false);
         JsonArray readRoutes = new JsonArray();
-        readRoutes.add("GET /api/v1/teamwork/project");
-        readRoutes.add("GET /api/v1/teamwork/descriptors");
-        readRoutes.add("GET /api/v1/teamwork/branches");
-        readRoutes.add("GET /api/v1/teamwork/history");
-        readRoutes.add("GET /api/v1/teamwork/locks");
+        readRoutes.add(JsonCompat.string("GET /api/v1/teamwork/project"));
+        readRoutes.add(JsonCompat.string("GET /api/v1/teamwork/descriptors"));
+        readRoutes.add(JsonCompat.string("GET /api/v1/teamwork/branches"));
+        readRoutes.add(JsonCompat.string("GET /api/v1/teamwork/history"));
+        readRoutes.add(JsonCompat.string("GET /api/v1/teamwork/locks"));
         response.add("readRoutes", readRoutes);
         return response;
     }

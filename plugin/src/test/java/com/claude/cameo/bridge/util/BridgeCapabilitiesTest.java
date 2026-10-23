@@ -26,6 +26,10 @@ public class BridgeCapabilitiesTest {
         assertEquals(status.get("pluginVersion").getAsString(), BridgeCapabilities.pluginVersion());
         assertEquals("v1", status.get("apiVersion").getAsString());
         assertEquals("1", status.get("handshakeVersion").getAsString());
+        assertEquals(BridgePlatform.target(), status.get("cameoTarget").getAsString());
+        assertEquals(BridgePlatform.javaRelease(), status.get("targetJavaRelease").getAsInt());
+        assertEquals(!"2022x".equals(BridgePlatform.target()),
+                status.getAsJsonObject("platformLimitations").get("genericTableCellLoadWaitAvailable").getAsBoolean());
         assertTrue(status.get("healthy").getAsBoolean());
 
         JsonObject compatibility = status.getAsJsonObject("compatibility");

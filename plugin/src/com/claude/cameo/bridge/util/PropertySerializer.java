@@ -30,7 +30,7 @@ public final class PropertySerializer {
         if (manager == null) {
             json.addProperty("propertyCount", 0);
             json.add("properties", properties);
-            warnings.add("PropertyManager was null");
+            warnings.add(JsonCompat.string("PropertyManager was null"));
             json.add("warnings", warnings);
             return json;
         }
@@ -45,7 +45,7 @@ public final class PropertySerializer {
                 }
             }
         } catch (Exception e) {
-            warnings.add("Could not read properties: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            warnings.add(JsonCompat.string("Could not read properties: " + e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
 
         json.addProperty("propertyCount", properties.size());
@@ -61,7 +61,7 @@ public final class PropertySerializer {
         JsonArray warnings = new JsonArray();
         if (property == null) {
             json.add("value", JsonNull.INSTANCE);
-            warnings.add("Property was null");
+            warnings.add(JsonCompat.string("Property was null"));
             json.add("warnings", warnings);
             return json;
         }
@@ -78,7 +78,7 @@ public final class PropertySerializer {
             json.addProperty("valueType", value != null ? value.getClass().getName() : "null");
             json.addProperty("valueString", value != null ? String.valueOf(value) : null);
         } catch (Exception e) {
-            warnings.add("Could not read value: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            warnings.add(JsonCompat.string("Could not read value: " + e.getClass().getSimpleName() + ": " + e.getMessage()));
             json.add("value", JsonNull.INSTANCE);
         }
 
@@ -177,7 +177,7 @@ public final class PropertySerializer {
                 // Reflection dumps are diagnostic; inaccessible getters are expected.
             }
         }
-        if (getters.size() > 0) {
+        if (getters.entrySet().size() > 0) {
             json.add("getterValues", getters);
         }
     }
@@ -189,7 +189,7 @@ public final class PropertySerializer {
                 json.addProperty(key, value);
             }
         } catch (Exception e) {
-            warnings.add("Could not read " + key + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            warnings.add(JsonCompat.string("Could not read " + key + ": " + e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
     }
 

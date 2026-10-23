@@ -9,17 +9,23 @@ import java.util.function.LongSupplier;
 /** Bounded immutable native export handles, unrelated to consumer processing. */
 public final class NativeExportStore {
     public static final int MAX_BYTES=24*1024*1024,CHUNK_BYTES=256*1024;
-    private record Export(JsonObject manifest,List<byte[]> files,long expiry) {}
+    private static final class Export {
+        private final List<byte[]> files;
+        private final long expiry;
+        Export(List<byte[]> files, long expiry) { this.files=List.copyOf(files); this.expiry=expiry; }
+        List<byte[]> files() { return files; }
+        long expiry() { return expiry; }
+    }
     private final Map<String,Export> exports=new HashMap<>();
     private final LongSupplier clock;
     public NativeExportStore() { this(System::currentTimeMillis); }
     public NativeExportStore(LongSupplier clock) { this.clock=clock; }
     private void expire() { exports.values().removeIf(e->e.expiry()<=clock.getAsLong()); }
-    public static String hash(byte[] bytes) throws Exception { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)); }
+    public static String hash(byte[] bytes) throws Exception { return Hex.format(MessageDigest.getInstance("SHA-256").digest(bytes)); }
     public synchronized JsonObject open(JsonObject context,Map<String,byte[]> resources) throws Exception {
         expire(); if(exports.size()>=2) throw new IllegalStateException("Native export capacity reached; release earlier handles");
         if(resources.isEmpty() || resources.size()>128) throw new IllegalArgumentException("Native export resource count exceeds bound");
-        JsonObject manifest=context.deepCopy(); JsonArray files=new JsonArray(); List<byte[]> captured=new ArrayList<>(); int total=0;
+        JsonObject manifest=JsonCompat.copy(context); JsonArray files=new JsonArray(); List<byte[]> captured=new ArrayList<>(); int total=0;
         for(var item:new TreeMap<>(resources).entrySet()) {
             String path=item.getKey();
             if(!path.matches("(?:native|catalog)/[^\\\\:\\x00-\\x1f]+") || Arrays.stream(path.split("/",-1)).anyMatch(p->p.isEmpty() || p.equals(".") || p.equals(".."))) throw new IllegalArgumentException("Unsafe native resource path");
@@ -30,7 +36,7 @@ public final class NativeExportStore {
         String id=UUID.randomUUID().toString(); long expiry=clock.getAsLong()+300000;
         manifest.addProperty("schemaVersion",1); manifest.addProperty("exportId",id); manifest.add("files",files);
         manifest.addProperty("expiresAt",Instant.ofEpochMilli(expiry).toString()); manifest.addProperty("totalBytes",total);
-        exports.put(id,new Export(manifest,captured,expiry)); return manifest.deepCopy();
+        exports.put(id,new Export(captured,expiry)); return JsonCompat.copy(manifest);
     }
     public synchronized JsonObject read(String id,String resourceId,int offset,int limit) {
         expire(); Export export=exports.get(id);

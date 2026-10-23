@@ -216,13 +216,17 @@ public class GenericTableHandler implements HttpHandler {
         }
         response.add("cells", cells);
         response.addProperty("cellCount", cells.size());
+        response.addProperty("cellValuesLoadWaitSupported", com.claude.cameo.bridge.util.GenericTableLoad.supportsWait());
+        if (!com.claude.cameo.bridge.util.GenericTableLoad.supportsWait()) {
+            response.addProperty("cellValuesLoadWarning", "This Cameo version has no cell-load wait API; values may still be loading. Read the table again if needed.");
+        }
         return response;
     }
 
     private void refresh(Diagram diagram) {
         GenericTableManager.refreshTable(diagram);
         try {
-            GenericTableManager.waitForCellValuesLoad(diagram);
+            com.claude.cameo.bridge.util.GenericTableLoad.await(diagram);
         } catch (TimeoutException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
@@ -239,7 +243,8 @@ public class GenericTableHandler implements HttpHandler {
         if (diagram != null && diagram.getOwner() instanceof Element) {
             Element owner = (Element) diagram.getOwner();
             json.addProperty("ownerId", owner.getID());
-            if (owner instanceof com.nomagic.uml2.ext.magicdraw.classes.mdkernel.NamedElement namedOwner) {
+            if (owner instanceof com.nomagic.uml2.ext.magicdraw.classes.mdkernel.NamedElement) {
+                com.nomagic.uml2.ext.magicdraw.classes.mdkernel.NamedElement namedOwner = (com.nomagic.uml2.ext.magicdraw.classes.mdkernel.NamedElement) owner;
                 json.addProperty("ownerName", namedOwner.getName());
             }
         }
@@ -252,7 +257,8 @@ public class GenericTableHandler implements HttpHandler {
 
     private Diagram resolveDiagram(com.nomagic.magicdraw.core.Project project, String tableId) {
         Object element = project.getElementByID(tableId);
-        if (element instanceof Diagram diagram) {
+        if (element instanceof Diagram) {
+            Diagram diagram = (Diagram) element;
             return diagram;
         }
         throw new IllegalArgumentException("Generic Table not found: " + tableId);
@@ -260,7 +266,8 @@ public class GenericTableHandler implements HttpHandler {
 
     private Element resolveElement(com.nomagic.magicdraw.core.Project project, String elementId, String label) {
         Object element = project.getElementByID(elementId);
-        if (element instanceof Element resolved) {
+        if (element instanceof Element) {
+            Element resolved = (Element) element;
             return resolved;
         }
         throw new IllegalArgumentException(label + " not found: " + elementId);
@@ -287,7 +294,8 @@ public class GenericTableHandler implements HttpHandler {
 
     private Element resolveTypeElement(com.nomagic.magicdraw.core.Project project, String typeName) {
         Object type = resolveTypeReference(project, typeName);
-        if (type instanceof Element element) {
+        if (type instanceof Element) {
+            Element element = (Element) type;
             return element;
         }
         throw new IllegalArgumentException("Could not resolve type element: " + typeName);

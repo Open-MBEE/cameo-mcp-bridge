@@ -109,7 +109,7 @@ public class ElementSerializer {
                         }
                     }
                 }
-                if (tags.size() > 0) {
+                if (tags.entrySet().size() > 0) {
                     json.add("taggedValues", tags);
                 }
             }
@@ -444,7 +444,7 @@ public class ElementSerializer {
                 JsonArray stArray = new JsonArray();
                 for (Stereotype st : stereotypes) {
                     if (st != null && st.getName() != null && !st.getName().isEmpty()) {
-                        stArray.add(st.getName());
+                        stArray.add(JsonCompat.string(st.getName()));
                     }
                 }
                 if (stArray.size() > 0) {

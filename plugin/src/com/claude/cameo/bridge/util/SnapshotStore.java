@@ -20,7 +20,7 @@ public final class SnapshotStore {
         snapshot.addProperty("snapshotId", id);
         snapshot.addProperty("createdAt", Instant.now().toString());
         SNAPSHOTS.put(id, snapshot);
-        return snapshot.deepCopy();
+        return JsonCompat.copy(snapshot);
     }
 
     public static synchronized List<JsonObject> list() {
@@ -39,7 +39,7 @@ public final class SnapshotStore {
 
     public static synchronized JsonObject get(String id) {
         JsonObject snapshot = SNAPSHOTS.get(id);
-        return snapshot != null ? snapshot.deepCopy() : null;
+        return snapshot != null ? JsonCompat.copy(snapshot) : null;
     }
 
     public static synchronized boolean delete(String id) {
@@ -48,7 +48,7 @@ public final class SnapshotStore {
 
     private static void copyIfPresent(JsonObject source, JsonObject target, String key) {
         if (source.has(key)) {
-            target.add(key, source.get(key).deepCopy());
+            target.add(key, JsonCompat.copy(source.get(key)));
         }
     }
 }

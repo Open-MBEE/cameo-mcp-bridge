@@ -23,7 +23,7 @@ public final class CreationPlanHandler implements HttpHandler {
         try {
             byte[] bytes=exchange.getRequestBody().readNBytes(65537);
             if(bytes.length>65536) throw new IllegalArgumentException("Creation request exceeds 64 KiB");
-            JsonObject request=JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject request=new JsonParser().parse(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
             String route=exchange.getRequestURI().getPath(); JsonObject result;
             if(route.equals("/api/v1/creation/prepare")) {
                 JsonObject spec=CameoCreationPlans.specification(request);
@@ -54,8 +54,8 @@ public final class CreationPlanHandler implements HttpHandler {
         NativeBackend(Project p) { project=p; }
         private Element element(String id) {
             Object result=project.getElementByID(id);
-            if(!(result instanceof Element e)) throw new IllegalArgumentException("Creation reference not found: "+id);
-            return e;
+            if(!(result instanceof Element)) throw new IllegalArgumentException("Creation reference not found: "+id);
+            return (Element) result;
         }
         private void primary(Element e) {
             if(ProjectUtilities.getProject((EObject)e)!=project.getPrimaryProject()) throw new IllegalArgumentException("Creation references must belong to the primary project");
@@ -81,8 +81,8 @@ public final class CreationPlanHandler implements HttpHandler {
             if(project.isRemote()) throw new IllegalArgumentException("Creation MVP supports local projects only");
             if(SessionManager.getInstance().isSessionCreated(project)) throw new IllegalStateException("Existing Cameo editing session must finish first");
             Element selected=element(CameoCreationPlans.text(spec,"targetPackageId"));
-            if(!(selected instanceof Package p) || selected instanceof Profile) throw new IllegalArgumentException("Choose an existing ordinary target package");
-            primary(selected); target=p;
+            if(!(selected instanceof Package) || selected instanceof Profile) throw new IllegalArgumentException("Choose an existing ordinary target package");
+            primary(selected); target=(Package)selected;
             if(!target.isEditable()) throw new IllegalArgumentException("Target package is read-only");
             String fingerprint=PrimaryModelFingerprint.capture(project,"creation-preview");
             for(JsonElement value:spec.getAsJsonArray("operations")) {
@@ -94,7 +94,7 @@ public final class CreationPlanHandler implements HttpHandler {
                     if(kind.equals("property")) {
                         if(!(parent instanceof com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Class) || !StereotypesHelper.hasStereotypeOrDerived(parent,block())) throw new IllegalArgumentException("Properties require a Block owner");
                     } else if(!(parent instanceof Package) || parent instanceof Profile) throw new IllegalArgumentException("Packages and blocks require a package owner");
-                    for(Element sibling:parent.getOwnedElement()) if(sibling instanceof NamedElement n && op.get("name").getAsString().equals(n.getName())) throw new IllegalArgumentException("A sibling with this name already exists");
+                    for(Element sibling:parent.getOwnedElement()) if(sibling instanceof NamedElement && op.get("name").getAsString().equals(((NamedElement)sibling).getName())) throw new IllegalArgumentException("A sibling with this name already exists");
                 }
                 if(kind.equals("block") || kind.equals("property")) block=block();
                 if(kind.equals("property") && !op.get("type").getAsString().startsWith("@")) {
@@ -105,7 +105,7 @@ public final class CreationPlanHandler implements HttpHandler {
             // Do not add/apply profiles as a hidden side effect of structural creation.
             if(block!=null) {
                 Package profile=StereotypesHelper.getProfileForStereotype(block); boolean applied=false;
-                for(Element e=target;e!=null;e=e.getOwner()) if(e instanceof Package ancestor && StereotypesHelper.getAppliedProfiles(ancestor).contains(profile)) applied=true;
+                for(Element e=target;e!=null;e=e.getOwner()) if(e instanceof Package && StereotypesHelper.getAppliedProfiles((Package)e).contains(profile)) applied=true;
                 if(!applied) throw new IllegalArgumentException("Apply the SysML profile to the target package or its ancestor in Cameo first");
             }
             JsonObject context=new JsonObject(); context.addProperty("projectId",ProjectIdentity.token(project)); context.addProperty("projectName",project.getName());
@@ -124,19 +124,21 @@ public final class CreationPlanHandler implements HttpHandler {
             for(JsonElement value:spec.getAsJsonArray("operations")) {
                 JsonObject op=value.getAsJsonObject(); String kind=op.get("kind").getAsString(),owner=op.get("owner").getAsString();
                 Element parent=resolve(owner,created);
-                NamedElement added=switch(kind) {
-                    case "package" -> factory.createPackageInstance();
-                    case "block" -> factory.createClassInstance();
-                    case "property" -> factory.createPropertyInstance();
-                    default -> throw new IllegalArgumentException("Unknown creation kind");
-                };
+                NamedElement added;
+                switch(kind) {
+                    case "package": added=factory.createPackageInstance(); break;
+                    case "block": added=factory.createClassInstance(); break;
+                    case "property": added=factory.createPropertyInstance(); break;
+                    default: throw new IllegalArgumentException("Unknown creation kind");
+                }
                 added.setName(op.get("name").getAsString()); ModelElementsManager.getInstance().addElement(added,parent);
                 if(kind.equals("block")) {
                     if(!StereotypesHelper.canApplyStereotype(added,block)) throw new IllegalStateException("Block stereotype cannot be applied");
                     StereotypesHelper.addStereotype(added,block);
                     if(!StereotypesHelper.hasStereotype(added,block)) throw new IllegalStateException("Block stereotype verification failed");
                 }
-                if(added instanceof Property property) {
+                if(added instanceof Property) {
+                    Property property=(Property)added;
                     Type type=(Type)resolve(op.get("type").getAsString(),created); property.setType(type);
                     var lower=factory.createLiteralIntegerInstance(); lower.setValue(op.get("lower").getAsInt()); property.setLowerValue(lower);
                     var upper=factory.createLiteralUnlimitedNaturalInstance(); upper.setValue(op.get("upper").getAsInt()); property.setUpperValue(upper);

@@ -1,0 +1,117 @@
+{
+  "scope": "Read-only basic live smoke; no model writes or saves",
+  "platforms": {
+    "2022x": {
+      "startedAt": "2026-10-23T07:13:26Z",
+      "pluginVersion": "3.1.0",
+      "cameoTarget": "2022x",
+      "runtimeJavaVersion": "11.0.14.1",
+      "targetJavaRelease": 11,
+      "port": 18740,
+      "passed": 11,
+      "failed": 0,
+      "checks": [
+        {
+          "name": "status and version",
+          "passed": true
+        },
+        {
+          "name": "capability compatibility",
+          "passed": true
+        },
+        {
+          "name": "open project",
+          "passed": true
+        },
+        {
+          "name": "UI state",
+          "passed": true
+        },
+        {
+          "name": "active diagram",
+          "passed": true
+        },
+        {
+          "name": "UI selection",
+          "passed": true
+        },
+        {
+          "name": "read root element",
+          "passed": true
+        },
+        {
+          "name": "bounded element query",
+          "passed": true
+        },
+        {
+          "name": "list diagrams",
+          "passed": true
+        },
+        {
+          "name": "project state after checks",
+          "passed": true
+        },
+        {
+          "name": "project identity and dirty state unchanged",
+          "passed": true
+        }
+      ]
+    },
+    "2024x": {
+      "startedAt": "2026-10-23T07:19:14Z",
+      "pluginVersion": "3.1.0",
+      "cameoTarget": "2024x",
+      "runtimeJavaVersion": "17.0.12",
+      "targetJavaRelease": 17,
+      "port": 18740,
+      "passed": 11,
+      "failed": 0,
+      "checks": [
+        {
+          "name": "status and version",
+          "passed": true
+        },
+        {
+          "name": "capability compatibility",
+          "passed": true
+        },
+        {
+          "name": "open project",
+          "passed": true
+        },
+        {
+          "name": "UI state",
+          "passed": true
+        },
+        {
+          "name": "active diagram",
+          "passed": true
+        },
+        {
+          "name": "UI selection",
+          "passed": true
+        },
+        {
+          "name": "read root element",
+          "passed": true
+        },
+        {
+          "name": "bounded element query",
+          "passed": true
+        },
+        {
+          "name": "list diagrams",
+          "passed": true
+        },
+        {
+          "name": "project state after checks",
+          "passed": true
+        },
+        {
+          "name": "project identity and dirty state unchanged",
+          "passed": true
+        }
+      ]
+    }
+  }
+}

@@ -2,7 +2,9 @@
 
 Run these commands from the repository root. The supported release is
 [3.0.0 for 2024x](https://github.com/Open-MBEE/cameo-mcp-bridge/releases/tag/v3.0.0).
-Keep `2024x` in both the downloadable filename and release title.
+Keep the target (`2024x` or `2022x`) in downloadable filenames and release titles.
+2024x remains the default. Both targets passed basic live read-only smoke;
+2022x native-export and guarded-write qualification is still pending.
 
 ## Prerequisites and source
 
@@ -36,17 +38,17 @@ if ($LASTEXITCODE -ne 0) { throw 'Plugin build or tests failed' }
 ```
 
 On Linux/macOS, from `plugin/`, use `./gradlew clean test packagePlugin`
-with the same properties and platform-appropriate paths. The currently declared
-test launcher uses `bin/java.exe` when `jdk17Home` is supplied, so on those
-platforms set `JAVA_HOME` to JDK 17 and omit `jdk17Home`.
+with the same properties and platform-appropriate paths. Java executable
+selection is platform-neutral. Set `JAVA_HOME` to JDK 17 for Gradle and optionally
+pass `-Pjdk17Home` for the compiler and `-PtestJavaHome` for the test JVM.
 
-The current 3.1.0 output is `plugin/build/cameo-mcp-bridge-3.1.0-2024x.zip`.
+The current 3.1.0 output is `plugin/build/2024x/cameo-mcp-bridge-3.1.0-2024x.zip`.
 `assemblePlugin` only prepares a directory; `packagePlugin` creates the
 Resource/Plugin Manager installer. Build/test/package do not deploy the plugin.
 Do not run `deploy`, `install.sh`, restart Cameo, or mutate a model as a side
 effect of release validation.
 
-Check `plugin/build/reports/tests/test/index.html` for passing tests. List and
+Check `plugin/build/2024x/reports/tests/test/index.html` for passing tests. List and
 extract the ZIP into a temporary directory; it must contain:
 
 ```text
@@ -61,7 +63,7 @@ contains `com/claude/cameo/bridge/CameoMCPBridgePlugin.class`. Do not include Ca
 SDK classes/JARs. Record the checksum:
 
 ```powershell
-Get-FileHash ./plugin/build/cameo-mcp-bridge-3.1.0-2024x.zip -Algorithm SHA256
+Get-FileHash ./plugin/build/2024x/cameo-mcp-bridge-3.1.0-2024x.zip -Algorithm SHA256
 ```
 
 The original 3.0.0 build passed 32 plugin tests against local 2024x R2 libraries.
@@ -69,18 +71,77 @@ Its SHA-256 is `9fa1b6a25b14b48f30f244344b34339c61552fd0624edb797a86f4bcc0aaa09f
 This is a record of the published artifact; later builds may differ.
 Compile/unit verification does not establish live runtime support.
 
+## Additional 2022x build
+
+The shared 3.1.0 source also builds against the local 2022x installation. This
+artifact passed installation and basic read-only live tests on 2022x. Native
+export and guarded-write workflows remain experimental pending separate live
+qualification; unit tests and basic smoke checks do not qualify those workflows.
+
+From the repository root in PowerShell:
+
+```powershell
+$env:JAVA_HOME = 'C:/path/to/jdk-17'
+& ./plugin/gradlew.bat -p plugin clean test packagePlugin sdkLinkageSmoke '-PcameoTarget=2022x' '-PcameoHome=C:/Program Files/Magic Systems of Systems Architect' "-Pjdk17Home=$env:JAVA_HOME" --console=plain
+if ($LASTEXITCODE -ne 0) { throw '2022x validation failed' }
+py -3 scripts/verify_plugin_zip.py plugin/build/2022x/cameo-mcp-bridge-3.1.0-2022x.zip --target 2022x
+```
+
+Gradle and compilation run on JDK 17, with `--release 11` for the 2022x target.
+Tests and the linkage probe run on the SDK's bundled `jre` (Java 11). Supply
+`-PtestJavaHome=/path/to/java11` if that runtime is not present. The test suite
+checks the actual Java feature version, not just the compiler flag. The SDK's
+own Gson is used (2.2.4 on the tested 2022x install); it is never bundled.
+Hamcrest 1.3 is a test-only dependency downloaded from Maven Central on first use.
+
+The ZIP is `plugin/build/2022x/cameo-mcp-bridge-3.1.0-2022x.zip`, and the test report
+is `plugin/build/2022x/reports/tests/test/index.html`. Build target names and SDK
+descriptor versions are validated before compilation. Generated descriptors use
+2022x plugin dependencies and `mdVersionMin=mdVersionMax=2022x`; installation on
+refresh/hotfix variants still needs live Resource Manager verification. The
+2022x plugin also refuses to start on a non-2022x exporter version.
+
+Always run the 2024x regression gate after shared-source changes:
+
+```powershell
+& ./plugin/gradlew.bat -p plugin clean test packagePlugin sdkLinkageSmoke '-PcameoTarget=2024x' '-PcameoHome=C:/Program Files/MSOSA2024xR2' "-Pjdk17Home=$env:JAVA_HOME" --console=plain
+if ($LASTEXITCODE -ne 0) { throw '2024x regression gate failed' }
+py -3 scripts/verify_plugin_zip.py plugin/build/2024x/cameo-mcp-bridge-3.1.0-2024x.zip --target 2024x
+```
+
+Outputs (including `clean`) are isolated under `plugin/build/<target>/`. Existing
+archives directly under `plugin/build/` are historical builds, not current outputs.
+`sdkLinkageSmoke` resolves bridge class signatures and checks the table wait API
+using installed SDK libraries without initializing Cameo or a project. The ZIP
+verifier checks target descriptors, every class's Java bytecode level, embedded
+build metadata, installer paths, absence of foreign dependency classes/JARs, and
+prints SHA-256.
+
+Both variants use bridge version 3.1.0 and the same Python client contract.
+Capabilities add `cameoTarget`, `targetJavaRelease`, `runtimeJavaVersion`,
+`platformQualification`, and `platformLimitations`. Matching older 2024x builds
+without the additive fields remain accepted. Unknown target names are refused.
+On 2022x, table responses report `cellValuesLoadWaitSupported=false` and warn
+that values may still be loading; read again after the table loads. The 2024x
+wait behavior is retained. Both variants retain the listening-port option.
+
+Do not replace the installed working 2024x build or overwrite its existing
+release asset to qualify 2022x. Publish one release with separate target ZIPs and record both build evidence
+and the remaining qualification limits. See the
+[compatibility plan](../plans/2022x-plugin-support.md) for further live checks.
+
 ## Publish a new release
 
-The following PowerShell example uses **3.0.1 only as a placeholder**. Set it to
+The following PowerShell example uses **3.2.0 only as a placeholder**. Set it to
 the new version already committed and built. Prepare a Markdown notes file with
 changes, supported platform, matching Python version, source SHA, checksum,
 test results, and any live-validation limitations.
 
 ```powershell
 $repo = 'Open-MBEE/cameo-mcp-bridge'
-$version = '3.0.1'
+$version = '3.2.0'
 $tag = "v$version"
-$asset = "plugin/build/cameo-mcp-bridge-$version-2024x.zip"
+$asset = "plugin/build/2024x/cameo-mcp-bridge-$version-2024x.zip"
 $commit = git rev-parse HEAD
 gh auth status
 git tag -a $tag $commit -m "Cameo MCP Bridge $version for 2024x"

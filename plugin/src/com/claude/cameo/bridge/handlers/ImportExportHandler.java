@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -268,7 +269,7 @@ public class ImportExportHandler implements HttpHandler {
 
     private Map<String, String> rowFromObject(JsonObject object) {
         Map<String, String> row = new LinkedHashMap<>();
-        for (String key : object.keySet()) {
+        for (String key : JsonCompat.keys(object)) {
             JsonElement value = object.get(key);
             if (value != null && !value.isJsonNull() && value.isJsonPrimitive()) {
                 row.put(key, value.getAsString());

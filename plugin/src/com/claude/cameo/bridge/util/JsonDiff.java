@@ -128,10 +128,10 @@ public final class JsonDiff {
         entry.addProperty("path", path);
         if (includeDetails) {
             if (before != null) {
-                entry.add("before", before.deepCopy());
+                entry.add("before", JsonCompat.copy(before));
             }
             if (after != null) {
-                entry.add("after", after.deepCopy());
+                entry.add("after", JsonCompat.copy(after));
             }
         }
         addLimited(target, entry, counter);

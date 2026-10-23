@@ -73,7 +73,7 @@ echo ""
 # Deploy to Cameo
 echo "Deploying plugin to Cameo..."
 mkdir -p "$CAMEO_HOME/plugins/com.claude.cameo.bridge"
-cp -r build/plugin-dist/com.claude.cameo.bridge/* "$CAMEO_HOME/plugins/com.claude.cameo.bridge/"
+cp -r build/2024x/plugin-dist/com.claude.cameo.bridge/* "$CAMEO_HOME/plugins/com.claude.cameo.bridge/"
 echo "Plugin deployed to: $CAMEO_HOME/plugins/com.claude.cameo.bridge/"
 echo ""
 

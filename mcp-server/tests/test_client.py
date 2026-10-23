@@ -50,6 +50,19 @@ class BridgeMetadataTests(unittest.TestCase):
                 }
             )
 
+    def test_platform_variants_preserve_matching_contract_and_reject_unknown_target(self) -> None:
+        metadata = {
+            "pluginVersion": client.BRIDGE_PLUGIN_VERSION,
+            "apiVersion": client.BRIDGE_API_VERSION,
+            "handshakeVersion": client.BRIDGE_HANDSHAKE_VERSION,
+        }
+        for target in ("2022x", "2024x"):
+            result = client._require_compatible_bridge({**metadata, "cameoTarget": target})
+            self.assertTrue(result["compatibility"]["clientCompatible"])
+            self.assertEqual(target, result["cameoTarget"])
+        with self.assertRaisesRegex(RuntimeError, "unsupported Cameo build target"):
+            client._require_compatible_bridge({**metadata, "cameoTarget": "unknown"})
+
 
 class ClientRequestTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:

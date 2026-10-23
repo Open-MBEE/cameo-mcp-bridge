@@ -38,15 +38,15 @@ public final class PrimaryModelFingerprint {
             if(System.nanoTime()-started>5_000_000_000L)
                 throw new IllegalArgumentException("Native snapshot fingerprint exceeded five seconds");
             hash.update(object.eClass().getName().getBytes(StandardCharsets.UTF_8));
-            if(object instanceof Element e) hash.update(e.getID().getBytes(StandardCharsets.UTF_8));
+            if(object instanceof Element) hash.update(((Element)object).getID().getBytes(StandardCharsets.UTF_8));
             for(EStructuralFeature f:object.eClass().getEAllStructuralFeatures()) {
                 if(f.isDerived() || f.isTransient() || !object.eIsSet(f)) continue;
                 hash.update(f.getName().getBytes(StandardCharsets.UTF_8));
                 Object value=object.eGet(f,false);
-                for(Object v:value instanceof Collection<?> c?c:Collections.singletonList(value)) {
+                for(Object v:value instanceof Collection<?>?(Collection<?>)value:Collections.singletonList(value)) {
                     if(++values>100000 || System.nanoTime()-started>5_000_000_000L)
                         throw new IllegalArgumentException("Native snapshot source fingerprint exceeded value/time budget");
-                    String token=v instanceof Element e?e.getID():String.valueOf(v);
+                    String token=v instanceof Element?((Element)v).getID():String.valueOf(v);
                     if(token.length()>1024*1024) throw new IllegalArgumentException("Native snapshot source fingerprint value exceeds 1 MiB");
                     hash.update((token.length()+":"+token).getBytes(StandardCharsets.UTF_8));
                 }
@@ -55,6 +55,6 @@ public final class PrimaryModelFingerprint {
         BridgeDiagnostics.log("model.snapshot phase="+phase+" primary="+source.objects().size()
                 +" attachedBoundaries="+source.attached().size()+" encounters="+source.encounters()
                 +" repeated="+source.repeated()+" values="+values+" types="+types);
-        return HexFormat.of().formatHex(hash.digest());
+        return Hex.format(hash.digest());
     }
 }

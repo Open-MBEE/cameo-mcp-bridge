@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -115,7 +116,7 @@ public class UiStateHandler implements HttpHandler {
                     String.valueOf(file));
             json.addProperty("filePath", String.valueOf(path));
         } else {
-            warnings.add("Project file path unavailable");
+            warnings.add(JsonCompat.string("Project file path unavailable"));
         }
         try {
             Element primary = project.getPrimaryModel();
@@ -123,12 +124,12 @@ public class UiStateHandler implements HttpHandler {
                 json.addProperty("primaryModelId", primary.getID());
             }
         } catch (Exception e) {
-            warnings.add("Primary model unavailable: " + e.getMessage());
+            warnings.add(JsonCompat.string("Primary model unavailable: " + e.getMessage()));
         }
         try {
             json.addProperty("isDirty", project.isDirty());
         } catch (Exception e) {
-            warnings.add("Project dirty state unavailable: " + e.getMessage());
+            warnings.add(JsonCompat.string("Project dirty state unavailable: " + e.getMessage()));
         }
         return json;
     }
@@ -149,7 +150,7 @@ public class UiStateHandler implements HttpHandler {
         if (diagram instanceof DiagramPresentationElement) {
             return (DiagramPresentationElement) diagram;
         }
-        warnings.add("Active diagram API was unavailable or returned null");
+        warnings.add(JsonCompat.string("Active diagram API was unavailable or returned null"));
         return null;
     }
 
@@ -165,7 +166,7 @@ public class UiStateHandler implements HttpHandler {
             if (item instanceof PresentationElement) {
                 array.add(PresentationSerializer.presentationSummary((PresentationElement) item, null));
             } else if (item != null) {
-                warnings.add("Unrecognized selected presentation type: " + BridgeDiagnostics.typeOf(item));
+                warnings.add(JsonCompat.string("Unrecognized selected presentation type: " + BridgeDiagnostics.typeOf(item)));
             }
         }
         BridgeDiagnostics.log("request=" + requestId + " ui.diagram selectionType="
@@ -200,8 +201,8 @@ public class UiStateHandler implements HttpHandler {
         if (element instanceof Element) {
             array.add(ElementSerializer.toJsonCompact((Element) element));
         } else {
-            warnings.add("Selected browser node could not be resolved: nodeType="
-                    + BridgeDiagnostics.typeOf(node) + ", userObjectType=" + BridgeDiagnostics.typeOf(userObject));
+            warnings.add(JsonCompat.string("Selected browser node could not be resolved: nodeType="
+                    + BridgeDiagnostics.typeOf(node) + ", userObjectType=" + BridgeDiagnostics.typeOf(userObject)));
         }
     }
 

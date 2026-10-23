@@ -38,24 +38,23 @@ public class MatrixHandler implements HttpHandler {
 
     private static final Logger LOG = Logger.getLogger(MatrixHandler.class.getName());
     private static final String PREFIX = "/api/v1/matrices/";
-    private static final String UML_DEPENDENCY_CRITERIA = """
-            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-            <callExpressionSpecification xmlns="http://www.nomagic.com/schemas/MagicDraw/StructuredExpression/2013">
-                <taggedValues>
-                    <entry key="name">
-                        <value>Dependency</value>
-                    </entry>
-                </taggedValues>
-                <argument xsi:type="lookupExpressionSpecification" symbol="THIS" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
-                <expression xsi:type="relationExpressionSpecification" metaclass="Dependency" includeSubtypes="true" direction="DIRECT" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-                    <taggedValues>
-                        <entry key="name">
-                            <value>Dependency</value>
-                        </entry>
-                    </taggedValues>
-                </expression>
-            </callExpressionSpecification>
-            """;
+    private static final String UML_DEPENDENCY_CRITERIA =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+            + "<callExpressionSpecification xmlns=\"http://www.nomagic.com/schemas/MagicDraw/StructuredExpression/2013\">\n"
+            + "    <taggedValues>\n"
+            + "        <entry key=\"name\">\n"
+            + "            <value>Dependency</value>\n"
+            + "        </entry>\n"
+            + "    </taggedValues>\n"
+            + "    <argument xsi:type=\"lookupExpressionSpecification\" symbol=\"THIS\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"/>\n"
+            + "    <expression xsi:type=\"relationExpressionSpecification\" metaclass=\"Dependency\" includeSubtypes=\"true\" direction=\"DIRECT\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "        <taggedValues>\n"
+            + "            <entry key=\"name\">\n"
+            + "                <value>Dependency</value>\n"
+            + "            </entry>\n"
+            + "        </taggedValues>\n"
+            + "    </expression>\n"
+            + "</callExpressionSpecification>\n";
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {

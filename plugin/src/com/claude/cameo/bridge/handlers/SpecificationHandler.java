@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -162,7 +163,7 @@ public class SpecificationHandler implements HttpHandler {
 
             // Read owned constraints (Use Case Description fields, etc.)
             JsonObject constraints = readOwnedConstraints(element);
-            if (constraints.size() > 0) {
+            if (constraints.entrySet().size() > 0) {
                 response.add("constraints", constraints);
             }
 
@@ -177,9 +178,9 @@ public class SpecificationHandler implements HttpHandler {
 
         JsonObject body = JsonHelper.parseBody(exchange);
         boolean hasProps = body.has("properties") && body.get("properties").isJsonObject()
-                && body.getAsJsonObject("properties").size() > 0;
+                && body.getAsJsonObject("properties").entrySet().size() > 0;
         boolean hasConstraints = body.has("constraints") && body.get("constraints").isJsonObject()
-                && body.getAsJsonObject("constraints").size() > 0;
+                && body.getAsJsonObject("constraints").entrySet().size() > 0;
         if (!hasProps && !hasConstraints) {
             HttpBridgeServer.sendError(exchange, 400, "BAD_REQUEST",
                     "Request body must contain a \"properties\" and/or \"constraints\" object");
@@ -219,7 +220,7 @@ public class SpecificationHandler implements HttpHandler {
             JsonArray unrecognized = new JsonArray();
             int setCount = 0;
 
-            for (String propName : props.keySet()) {
+            for (String propName : JsonCompat.keys(props)) {
                 JsonElement valueElement = props.get(propName);
                 // 1. Check tagged values first
                 if (tagToStereotype.containsKey(propName)) {
@@ -229,7 +230,7 @@ public class SpecificationHandler implements HttpHandler {
                             stereo,
                             propName,
                             TaggedValueCoercion.coerceForTag(project, stereo, propName, valueElement));
-                    setPropertiesArr.add(propName);
+                    setPropertiesArr.add(JsonCompat.string(propName));
                     setCount++;
                     continue;
                 }
@@ -238,21 +239,21 @@ public class SpecificationHandler implements HttpHandler {
                 boolean handled = trySetStandardProperty(
                         element, propName, valueElement, project);
                 if (handled) {
-                    setPropertiesArr.add(propName);
+                    setPropertiesArr.add(JsonCompat.string(propName));
                     setCount++;
                     continue;
                 }
 
                 // 3. Unrecognized
-                unrecognized.add(propName);
+                unrecognized.add(JsonCompat.string(propName));
             }
 
             // Handle constraints (Use Case Description fields, etc.)
             JsonArray setConstraintsArr = new JsonArray();
-            for (String cName : constraintProps.keySet()) {
+            for (String cName : JsonCompat.keys(constraintProps)) {
                 String cValue = constraintProps.get(cName).getAsString();
                 setOrCreateConstraint(element, cName, cValue, project);
-                setConstraintsArr.add(cName);
+                setConstraintsArr.add(JsonCompat.string(cName));
                 setCount++;
             }
 
@@ -353,7 +354,7 @@ public class SpecificationHandler implements HttpHandler {
                     ref.addProperty("name", ((NamedElement) item).getName());
                     arr.add(ref);
                 } else if (item != null) {
-                    arr.add(String.valueOf(item));
+                    arr.add(JsonCompat.string(String.valueOf(item)));
                 }
             }
             if (arr.size() > 0) {
@@ -527,7 +528,7 @@ public class SpecificationHandler implements HttpHandler {
                     }
                 }
 
-                if (taggedValues.size() > 0) {
+                if (taggedValues.entrySet().size() > 0) {
                     stereoObj.add("taggedValues", taggedValues);
                 }
 

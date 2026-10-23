@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.JsonHelper;
@@ -77,11 +78,11 @@ public class ReportWizardHandler implements HttpHandler {
         response.add("classProbe", classProbe);
         response.add("pluginDirectoriesFound", OptionalCapabilitySupport.pluginDirectories("reportwizard", "report"));
         JsonArray formats = new JsonArray();
-        formats.add("docx");
-        formats.add("pdf");
-        formats.add("html");
-        formats.add("xlsx");
-        formats.add("pptx");
+        formats.add(JsonCompat.string("docx"));
+        formats.add(JsonCompat.string("pdf"));
+        formats.add(JsonCompat.string("html"));
+        formats.add(JsonCompat.string("xlsx"));
+        formats.add(JsonCompat.string("pptx"));
         response.add("knownOutputFormats", formats);
         response.addProperty("generationMode", available ? "native-generate-task" : "unavailable");
         response.addProperty("generationWriteEnabled", available);

@@ -27,7 +27,7 @@ public final class NativeExporterResources {
     }
     private static Path single(Path directory,String pattern) throws Exception {
         try(var files=Files.list(directory)) {
-            var matches=files.filter(p->p.getFileName().toString().matches(pattern)).toList();
+            var matches=files.filter(p->p.getFileName().toString().matches(pattern)).collect(java.util.stream.Collectors.toList());
             if(matches.size()!=1) throw new IllegalArgumentException("Cannot identify unique installed exporter resources");
             return matches.get(0);
         }

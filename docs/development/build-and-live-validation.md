@@ -2,6 +2,10 @@
 
 This repo is commonly used from Windows against a local CATIA Magic install at `D:\DevTools\CatiaMagic`.
 
+The build defaults to 2024x; see the release guide for the additional 2022x
+target, target-isolated outputs, and required Java 11 validation. Live installation
+and model tests require an explicitly authorized session.
+
 ## Java Build
 
 For installer ZIP packaging and GitHub publication, use the

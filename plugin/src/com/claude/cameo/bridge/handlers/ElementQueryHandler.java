@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -594,7 +595,7 @@ public class ElementQueryHandler implements HttpHandler {
             if (stereotypes != null && !stereotypes.isEmpty()) {
                 JsonArray stereotypeNames = new JsonArray();
                 for (Stereotype stereotype : stereotypes) {
-                    stereotypeNames.add(stereotype.getName());
+                    stereotypeNames.add(JsonCompat.string(stereotype.getName()));
                 }
                 json.add("stereotypes", stereotypeNames);
             }
@@ -696,9 +697,9 @@ public class ElementQueryHandler implements HttpHandler {
                     connectorEnds.add(endJson);
 
                     if (matchesQueriedElement) {
-                        selfEnds.add(endJson.deepCopy());
+                        selfEnds.add(JsonCompat.copy(endJson));
                     } else {
-                        otherEnds.add(endJson.deepCopy());
+                        otherEnds.add(JsonCompat.copy(endJson));
                     }
 
                     appendRelatedElement(relatedElements, relatedElementIds, role, selfId);

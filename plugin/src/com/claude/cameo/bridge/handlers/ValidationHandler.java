@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -88,10 +89,10 @@ public class ValidationHandler implements HttpHandler {
         response.addProperty("status", probe.get("allFound").getAsBoolean() ? "available" : "missing-class");
         response.add("classProbe", probe);
         JsonArray routes = new JsonArray();
-        routes.add("GET /api/v1/validation/capabilities");
-        routes.add("GET /api/v1/validation/suites");
-        routes.add("POST /api/v1/validation/run");
-        routes.add("GET /api/v1/validation/results/{runId}");
+        routes.add(JsonCompat.string("GET /api/v1/validation/capabilities"));
+        routes.add(JsonCompat.string("GET /api/v1/validation/suites"));
+        routes.add(JsonCompat.string("POST /api/v1/validation/run"));
+        routes.add(JsonCompat.string("GET /api/v1/validation/results/{runId}"));
         response.add("routes", routes);
         response.addProperty("resultStoreLimit", RESULT_STORE_LIMIT);
         HttpBridgeServer.sendJson(exchange, 200, response);

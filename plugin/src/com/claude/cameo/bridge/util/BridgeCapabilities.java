@@ -196,7 +196,7 @@ public final class BridgeCapabilities {
 
     public static JsonArray supportedPluginVersions() {
         JsonArray versions = new JsonArray();
-        versions.add(PLUGIN_VERSION);
+        versions.add(JsonCompat.string(PLUGIN_VERSION));
         return versions;
     }
 
@@ -210,6 +210,14 @@ public final class BridgeCapabilities {
         json.addProperty("apiVersion", API_VERSION);
         json.addProperty("handshakeVersion", HANDSHAKE_VERSION);
         json.addProperty("port", port);
+        json.addProperty("cameoTarget", BridgePlatform.target());
+        json.addProperty("targetJavaRelease", BridgePlatform.javaRelease());
+        json.addProperty("runtimeJavaVersion", System.getProperty("java.version"));
+        json.addProperty("platformQualification", "2022x".equals(BridgePlatform.target())
+                ? "experimental; live 2022x qualification pending" : "2024x build target");
+        JsonObject platformLimitations = new JsonObject();
+        platformLimitations.addProperty("genericTableCellLoadWaitAvailable", !"2022x".equals(BridgePlatform.target()));
+        json.add("platformLimitations", platformLimitations);
         JsonObject creationPlans = new JsonObject();
         creationPlans.addProperty("schemaVersion", 1);
         creationPlans.addProperty("maxOperations", 100);
@@ -231,13 +239,13 @@ public final class BridgeCapabilities {
         json.add("modelExport", modelExport);
         json.addProperty("statusEndpoint", STATUS_PATH);
         JsonArray statusAliases = new JsonArray();
-        statusAliases.add(LEGACY_STATUS_PATH);
-        statusAliases.add(STATUS_PATH);
+        statusAliases.add(JsonCompat.string(LEGACY_STATUS_PATH));
+        statusAliases.add(JsonCompat.string(STATUS_PATH));
         json.add("statusAliases", statusAliases);
         json.addProperty("capabilitiesEndpoint", CAPABILITIES_PATH);
         JsonArray capabilityAliases = new JsonArray();
-        capabilityAliases.add(LEGACY_CAPABILITIES_PATH);
-        capabilityAliases.add(CAPABILITIES_PATH);
+        capabilityAliases.add(JsonCompat.string(LEGACY_CAPABILITIES_PATH));
+        capabilityAliases.add(JsonCompat.string(CAPABILITIES_PATH));
         json.add("capabilitiesAliases", capabilityAliases);
         json.add("compatibility", buildCompatibility());
         json.add("capabilities", buildCapabilityManifest());
@@ -262,7 +270,7 @@ public final class BridgeCapabilities {
             JsonArray group = groups.has(capability.group)
                     ? groups.getAsJsonArray(capability.group)
                     : new JsonArray();
-            group.add(capability.name);
+            group.add(JsonCompat.string(capability.name));
             groups.add(capability.group, group);
             endpoints.add(capability.toJson());
         }

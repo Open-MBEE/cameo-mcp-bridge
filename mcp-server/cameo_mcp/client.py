@@ -284,6 +284,11 @@ def _annotate_bridge_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     compatibility = dict(annotated.get("compatibility") or {})
     errors: list[str] = []
 
+    # Older matching 2024x builds omit the additive platform field.
+    cameo_target = annotated.get("cameoTarget")
+    if cameo_target is not None and cameo_target not in {"2022x", "2024x"}:
+        errors.append(f"unsupported Cameo build target {cameo_target}")
+
     plugin_version = annotated.get("pluginVersion") or annotated.get("version")
     if plugin_version != BRIDGE_PLUGIN_VERSION:
         errors.append(

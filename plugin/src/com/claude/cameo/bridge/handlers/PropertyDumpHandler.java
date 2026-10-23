@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.JsonHelper;
@@ -74,9 +75,9 @@ public class PropertyDumpHandler implements HttpHandler {
             JsonArray warnings = new JsonArray();
             try {
                 dpe.ensureLoaded();
-                warnings.add("Diagram ensureLoaded() was called before presentation inspection");
+                warnings.add(JsonCompat.string("Diagram ensureLoaded() was called before presentation inspection"));
             } catch (Exception e) {
-                warnings.add("ensureLoaded failed: " + e.getMessage());
+                warnings.add(JsonCompat.string("ensureLoaded failed: " + e.getMessage()));
             }
 
             JsonObject response = new JsonObject();
@@ -88,7 +89,7 @@ public class PropertyDumpHandler implements HttpHandler {
                 response.add("diagramPresentationProperties",
                         PropertySerializer.serializeManager(manager, includeRaw, summaryOnly));
             } catch (Exception e) {
-                warnings.add("Could not read diagram presentation property manager: " + e.getMessage());
+                warnings.add(JsonCompat.string("Could not read diagram presentation property manager: " + e.getMessage()));
             }
 
             Map<String, String> parentById = new LinkedHashMap<>();

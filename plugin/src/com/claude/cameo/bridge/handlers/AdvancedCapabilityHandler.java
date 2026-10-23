@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.JsonHelper;
 import com.google.gson.JsonArray;
@@ -136,9 +137,9 @@ public class AdvancedCapabilityHandler implements HttpHandler {
         JsonArray classesMissing = new JsonArray();
         for (String className : feature.classNames) {
             if (classAvailable(className)) {
-                classesFound.add(className);
+                classesFound.add(JsonCompat.string(className));
             } else {
-                classesMissing.add(className);
+                classesMissing.add(JsonCompat.string(className));
             }
         }
 
@@ -155,13 +156,13 @@ public class AdvancedCapabilityHandler implements HttpHandler {
         response.add("pluginDirectoriesFound", pluginDirs);
         JsonArray warnings = new JsonArray();
         if (!installed) {
-            warnings.add("No matching plugin directory was found under the local CATIA/Cameo plugins folder.");
+            warnings.add(JsonCompat.string("No matching plugin directory was found under the local CATIA/Cameo plugins folder."));
         }
         if (!classesAvailable) {
-            warnings.add("One or more expected native API classes were not loadable from the bridge classloader.");
+            warnings.add(JsonCompat.string("One or more expected native API classes were not loadable from the bridge classloader."));
         }
         if (available && !"validation".equals(feature.name)) {
-            warnings.add("Capability probe is positive; typed native operations still require live validation before writes are enabled.");
+            warnings.add(JsonCompat.string("Capability probe is positive; typed native operations still require live validation before writes are enabled."));
         }
         response.add("warnings", warnings);
         response.addProperty("nextProbe", "/api/v1/probes/execute");
@@ -198,7 +199,7 @@ public class AdvancedCapabilityHandler implements HttpHandler {
             String name = child.getName().toLowerCase(Locale.ROOT);
             for (String hint : hints) {
                 if (name.contains(hint.toLowerCase(Locale.ROOT))) {
-                    matches.add(child.getAbsolutePath());
+                    matches.add(JsonCompat.string(child.getAbsolutePath()));
                     break;
                 }
             }

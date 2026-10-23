@@ -17,14 +17,14 @@ import java.util.*;
 public final class NativeModelExportHandler implements HttpHandler {
     private final NativeExportStore store=new NativeExportStore();
     private static void keys(JsonObject value,String... fields) {
-        if(!value.keySet().equals(Set.of(fields))) throw new IllegalArgumentException("Unexpected native export fields");
+        if(!JsonCompat.keys(value).equals(Set.of(fields))) throw new IllegalArgumentException("Unexpected native export fields");
     }
     @Override public void handle(HttpExchange exchange) throws java.io.IOException {
         if(!exchange.getRequestMethod().equals("POST")) { HttpBridgeServer.sendError(exchange,405,"METHOD_NOT_ALLOWED","Use POST"); return; }
         try {
             byte[] bytes=exchange.getRequestBody().readNBytes(65537);
             if(bytes.length>65536) throw new IllegalArgumentException("Export request exceeds 64 KiB");
-            JsonObject request=JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject request=new JsonParser().parse(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
             if(!request.has("schemaVersion") || !request.get("schemaVersion").toString().equals("1")) throw new IllegalArgumentException("Native export schema 1 required");
             String route=exchange.getRequestURI().getPath(); JsonObject result;
             if(route.equals("/api/v1/model-exports/open")) {
@@ -73,7 +73,7 @@ public final class NativeModelExportHandler implements HttpHandler {
             if(System.nanoTime()-started>20_000_000_000L) throw new IllegalStateException("Native exporter exceeded 20 second budget");
             Map<String,byte[]> resources=new TreeMap<>(); long total=0;
             try(var paths=Files.walk(directory)) {
-                for(Path file:paths.toList()) {
+                for(Path file:paths.collect(java.util.stream.Collectors.toList())) {
                     if(Files.isSymbolicLink(file)) throw new IllegalArgumentException("Symlink in native output");
                     if(!Files.isRegularFile(file)) continue;
                     if(resources.size()>=124) throw new IllegalArgumentException("Native output resource count exceeds bound");
@@ -94,7 +94,7 @@ public final class NativeModelExportHandler implements HttpHandler {
             BridgeDiagnostics.log("model.export captured resources="+resources.size()+" nativeBytes="+total);
             return result;
         } finally {
-            try(var paths=Files.walk(directory)) { for(Path file:paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(file); }
+            try(var paths=Files.walk(directory)) { for(Path file:paths.sorted(Comparator.reverseOrder()).collect(java.util.stream.Collectors.toList())) Files.deleteIfExists(file); }
         }
     }
 }

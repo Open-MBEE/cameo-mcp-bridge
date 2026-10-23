@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -355,7 +356,7 @@ public class ElementMutationHandler implements HttpHandler {
                 }
             }
             int setCount = 0;
-            for (String tagName : values.keySet()) {
+            for (String tagName : JsonCompat.keys(values)) {
                 Object tagValue = TaggedValueCoercion.coerceForTag(
                         project,
                         stereo,
@@ -891,7 +892,7 @@ public class ElementMutationHandler implements HttpHandler {
         }
         for (com.nomagic.uml2.ext.magicdraw.classes.mdkernel.Class metaClass : metaclasses) {
             if (metaClass != null && metaClass.getName() != null) {
-                array.add(metaClass.getName());
+                array.add(JsonCompat.string(metaClass.getName()));
             }
         }
         return array;
@@ -904,7 +905,7 @@ public class ElementMutationHandler implements HttpHandler {
         }
         for (Profile profile : profiles) {
             if (profile != null && profile.getName() != null) {
-                array.add(profile.getName());
+                array.add(JsonCompat.string(profile.getName()));
             }
         }
         return array;

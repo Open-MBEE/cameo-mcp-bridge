@@ -1,5 +1,6 @@
 package com.claude.cameo.bridge.handlers;
 
+import com.claude.cameo.bridge.util.JsonCompat;
 import com.claude.cameo.bridge.HttpBridgeServer;
 import com.claude.cameo.bridge.util.EdtDispatcher;
 import com.claude.cameo.bridge.util.ElementSerializer;
@@ -315,9 +316,9 @@ public class RelationMapHandler implements HttpHandler {
             JsonArray warnings = new JsonArray();
             try {
                 dpe.ensureLoaded();
-                warnings.add("Relation Map ensureLoaded() was called before presentation inspection");
+                warnings.add(JsonCompat.string("Relation Map ensureLoaded() was called before presentation inspection"));
             } catch (Exception e) {
-                warnings.add("ensureLoaded failed: " + e.getMessage());
+                warnings.add(JsonCompat.string("ensureLoaded failed: " + e.getMessage()));
             }
             Map<String, String> parentById = new LinkedHashMap<>();
             List<PresentationElement> presentations = PresentationSerializer.flatten(dpe, parentById);
@@ -468,7 +469,7 @@ public class RelationMapHandler implements HttpHandler {
             boolean refreshed = false;
             if (expand != null && !"none".equalsIgnoreCase(expand)) {
                 if (!invokeRelationMapAction(dpe, true, expandAttempts)) {
-                    warnings.add("Expand requested but Relation Map display expansion failed");
+                    warnings.add(JsonCompat.string("Expand requested but Relation Map display expansion failed"));
                 }
             }
             if (refresh) {
@@ -476,7 +477,7 @@ public class RelationMapHandler implements HttpHandler {
                     RelationshipMapUtilities.refreshMap(diagram);
                     refreshed = true;
                 } catch (Exception e) {
-                    warnings.add("Relation Map refresh failed: " + describeException(e));
+                    warnings.add(JsonCompat.string("Relation Map refresh failed: " + describeException(e)));
                 }
             }
             if (layout != null) {
@@ -484,7 +485,7 @@ public class RelationMapHandler implements HttpHandler {
                     new GraphSettings(diagram).setLayout(layout);
                     dpe.layout(true);
                 } catch (Exception e) {
-                    warnings.add("Relation Map layout failed: " + describeException(e));
+                    warnings.add(JsonCompat.string("Relation Map layout failed: " + describeException(e)));
                 }
             }
             dpe.ensureLoaded();
@@ -494,10 +495,10 @@ public class RelationMapHandler implements HttpHandler {
                 try {
                     image = ImageExporter.export(dpe, false, scalePercentage);
                 } catch (Exception e) {
-                    warnings.add("Relation Map image export failed: " + describeException(e));
+                    warnings.add(JsonCompat.string("Relation Map image export failed: " + describeException(e)));
                 }
             } else {
-                warnings.add("Relation Map image export skipped because exportImage=false");
+                warnings.add(JsonCompat.string("Relation Map image export skipped because exportImage=false"));
             }
             JsonObject response = new JsonObject();
             response.addProperty("rendered", image != null);
@@ -962,7 +963,7 @@ public class RelationMapHandler implements HttpHandler {
         JsonArray array = new JsonArray();
         if (values != null) {
             for (String value : values) {
-                array.add(value);
+                array.add(JsonCompat.string(value));
             }
         }
         return array;
@@ -988,7 +989,7 @@ public class RelationMapHandler implements HttpHandler {
                 Object value = method.invoke(target);
                 values.add(name, PropertySerializer.serializeValue(value, includeRaw, summaryOnly));
             } catch (Exception e) {
-                warnings.add(name + " failed: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                warnings.add(JsonCompat.string(name + " failed: " + e.getClass().getSimpleName() + ": " + e.getMessage()));
             }
         }
         return values;
@@ -1097,7 +1098,7 @@ public class RelationMapHandler implements HttpHandler {
             Object relationshipTypeValues = dataManager != null ? invokeNoArg(dataManager, "getRelationshipTypes") : null;
             if (relationshipTypeValues instanceof Iterable<?>) {
                 for (Object relationshipType : (Iterable<?>) relationshipTypeValues) {
-                    relationshipTypes.add(getRelationshipTypeName(relationshipType));
+                    relationshipTypes.add(JsonCompat.string(getRelationshipTypeName(relationshipType)));
                 }
             }
             summary.add("relationshipTypes", relationshipTypes);

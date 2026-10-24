@@ -1,4 +1,4 @@
-# Native model export contract (3.0.0)
+# Native model export contract (schema 1)
 
 The bridge captures Cameo's native Eclipse UML2 v5 output without interpreting,
 filtering or translating its model. Consumers own processing of the captured data.

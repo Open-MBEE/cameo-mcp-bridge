@@ -12,7 +12,7 @@ from typing import Any, Optional
 import httpx
 from PIL import Image
 
-BRIDGE_PLUGIN_VERSION = "3.1.0"
+BRIDGE_PLUGIN_VERSION = "3.3.0"
 BRIDGE_API_VERSION = "v1"
 BRIDGE_HANDSHAKE_VERSION = "1"
 
@@ -274,7 +274,7 @@ def _get_client() -> httpx.AsyncClient:
         or _shared_client.is_closed
         or _shared_client_base_url != base_url
     ):
-        _shared_client = httpx.AsyncClient(base_url=base_url, timeout=30.0)
+        _shared_client = httpx.AsyncClient(base_url=base_url, timeout=30.0, trust_env=False)
         _shared_client_base_url = base_url
     return _shared_client
 
@@ -466,7 +466,7 @@ async def probe_bridge() -> dict[str, Any]:
     results: list[dict[str, Any]] = []
 
     try:
-        async with httpx.AsyncClient(base_url=root_url, timeout=5.0) as probe_client:
+        async with httpx.AsyncClient(base_url=root_url, timeout=5.0, trust_env=False) as probe_client:
             for kind, path in probes:
                 entry: dict[str, Any] = {"kind": kind, "path": path}
                 try:

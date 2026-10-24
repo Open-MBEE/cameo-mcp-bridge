@@ -15,7 +15,7 @@ public final class BridgeCapabilities {
 
     public static final String PLUGIN_ID = "com.claude.cameo.bridge";
     public static final String PLUGIN_NAME = "Cameo MCP Bridge";
-    private static final String RELEASE_VERSION = "3.1.0";
+    private static final String RELEASE_VERSION = "3.3.0";
     public static final String PLUGIN_VERSION = pluginVersion();
     public static final String API_VERSION = "v1";
     /** Runtime accessor for callers retained across incremental builds; avoids constant inlining. */
@@ -210,6 +210,13 @@ public final class BridgeCapabilities {
         json.addProperty("apiVersion", API_VERSION);
         json.addProperty("handshakeVersion", HANDSHAKE_VERSION);
         json.addProperty("port", port);
+        json.addProperty("browserRequestPolicy", "deny-direct-v1");
+        JsonObject browserService = new JsonObject();
+        browserService.addProperty("protocol", 1);
+        browserService.addProperty("approval", "native-cameo");
+        browserService.addProperty("defaultPort", 18741);
+        browserService.addProperty("settings", "Cameo MCP Bridge / Browser service");
+        json.add("browserService", browserService);
         json.addProperty("cameoTarget", BridgePlatform.target());
         json.addProperty("targetJavaRelease", BridgePlatform.javaRelease());
         json.addProperty("runtimeJavaVersion", System.getProperty("java.version"));

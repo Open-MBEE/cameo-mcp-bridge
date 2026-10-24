@@ -1,0 +1,35 @@
+{
+  "pluginVersion": "3.3.0",
+  "javaTestsPerTarget": {
+    "2024x": 57,
+    "2022x": 57
+  },
+  "sdkLinkage": {
+    "2022x": {
+      "javaRelease": 11,
+      "resolvedClasses": 94,
+      "genericTableCellLoadWaitAvailable": false
+    },
+    "2024x": {
+      "javaRelease": 17,
+      "resolvedClasses": 94,
+      "genericTableCellLoadWaitAvailable": true
+    }
+  },
+  "artifacts": [
+    {
+      "file": "plugin\\build\\2022x\\cameo-mcp-bridge-3.3.0-2022x.zip",
+      "target": "2022x",
+      "version": "3.3.0",
+      "classes": 94,
+      "sha256": "8f8782c6a903974423f57e781b6644c2a10cd786e1e43a7ce541ea40876965c9"
+    },
+    {
+      "file": "plugin\\build\\2024x\\cameo-mcp-bridge-3.3.0-2024x.zip",
+      "target": "2024x",
+      "version": "3.3.0",
+      "classes": 94,
+      "sha256": "52ecf1b5c8c4d17c322110703e929b941b7045d10adc69393f4516cb7f65b8a2"
+    }
+  ]
+}

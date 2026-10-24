@@ -68,6 +68,11 @@ class ClientRequestTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         reset_client_state()
 
+    def test_loopback_requests_do_not_use_environment_proxies(self) -> None:
+        with patch("cameo_mcp.client.httpx.AsyncClient") as constructor:
+            client._get_client()
+        self.assertIs(constructor.call_args.kwargs["trust_env"], False)
+
     async def test_status_returns_annotated_metadata(self) -> None:
         with patch(
             "cameo_mcp.client._request_raw",

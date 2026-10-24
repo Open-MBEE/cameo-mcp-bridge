@@ -1,9 +1,10 @@
 # Guarded structural change plans
 
 The bridge owns authoritative validation, project preconditions, transaction
-boundaries, rollback and durable at-most-once receipts. Consumers own planning
-and approval interfaces. No consumer approval interface or agent workflow runs
-inside this plugin. Project saving is a separate operation.
+boundaries, rollback and durable at-most-once receipts. Consumers own planning. Native API clients own their approval interfaces; the
+[browser service](browser-service.md) supplies generic native Cameo approvals.
+Consumer-specific agent workflows do not run inside this plugin. Project saving
+is a separate operation.
 
 POST `/api/v1/creation/prepare` accepts `schemaVersion:1`, current session
 `projectId`, an ordinary `targetPackageId` and 1–100 ordered operations. Each has

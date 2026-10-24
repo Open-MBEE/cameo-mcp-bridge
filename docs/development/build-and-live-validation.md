@@ -9,7 +9,7 @@ and model tests require an explicitly authorized session.
 ## Java Build
 
 For installer ZIP packaging and GitHub publication, use the
-[2024x plugin release guide](plugin-releases.md). Build and publication are
+[plugin release guide](plugin-releases.md). Build and publication are
 separate from deployment and live model validation below; deployment requires
 an explicit installation task.
 

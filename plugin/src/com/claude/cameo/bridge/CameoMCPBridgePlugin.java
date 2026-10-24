@@ -13,6 +13,7 @@ public class CameoMCPBridgePlugin extends Plugin {
 
     private static final Logger LOG = Logger.getLogger(CameoMCPBridgePlugin.class.getName());
     private HttpBridgeServer server;
+    private com.claude.cameo.bridge.browser.BrowserHttpServer browser;
 
     @Override
     public void init() {
@@ -42,6 +43,23 @@ public class CameoMCPBridgePlugin extends Plugin {
             int port = BridgePort.resolve(System.getProperty("cameo.mcp.port"), options.getPort());
             server = new HttpBridgeServer(port);
             server.start();
+            // Browser failures must not take down the proven native/desktop bridge.
+            if (options.isBrowserEnabled()) {
+                try {
+                    int browserPort = options.getBrowserPort();
+                    if (browserPort == port) throw new IllegalArgumentException("Browser and native ports must differ");
+                    com.claude.cameo.bridge.browser.BrowserBridge service = new com.claude.cameo.bridge.browser.BrowserBridge(
+                        options.getBrowserOrigins(), new com.claude.cameo.bridge.browser.NativeBrowserBackend(port),
+                        new com.claude.cameo.bridge.browser.CameoBrowserApproval());
+                    try { browser = new com.claude.cameo.bridge.browser.BrowserHttpServer(browserPort, service); }
+                    catch (Exception error) { service.close(); throw error; }
+                    browser.start();
+                    Application.getInstance().getGUILog().log("CameoMCPBridge: Browser service started on port " + browserPort);
+                } catch (Exception error) {
+                    Application.getInstance().getGUILog().showError("CameoMCPBridge: Browser service unavailable: " + error.getMessage()
+                        + ". Native/desktop bridge remains available. Stop the old Python connector if it owns the browser port.");
+                }
+            }
             Application.getInstance().getGUILog().log(
                 "CameoMCPBridge: HTTP server started on port " + port);
             LOG.info("CameoMCPBridge: HTTP server started on port " + port);
@@ -60,6 +78,7 @@ public class CameoMCPBridgePlugin extends Plugin {
 
     @Override
     public boolean close() {
+        if (browser != null) browser.close();
         if (server != null) {
             server.stop();
             LOG.info("CameoMCPBridge: HTTP server stopped");

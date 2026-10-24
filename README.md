@@ -1,6 +1,6 @@
 # Cameo MCP Bridge
 
-Version **3.1.0** exposes native model export resources and guarded structural
+Version **3.3.0** exposes native model export resources and guarded structural
 creation. It keeps Cameo SDK access, model consistency and transaction ownership
 in this plugin; consumers own interpretation and transformation of exported data.
 See [native export](docs/development/native-model-export.md) and
@@ -121,7 +121,7 @@ Gradle must run on a Java 17 JDK. You can also set `JDK17_HOME` or `JAVA17_HOME`
 
 For a ZIP that can be imported through Cameo's Resource/Plugin Manager, run
 `./gradlew packagePlugin` with the same `cameoHome` and `jdk17Home` properties.
-The archive is `plugin/build/2024x/cameo-mcp-bridge-3.1.0-2024x.zip` (relative to the
+The archive is `plugin/build/2024x/cameo-mcp-bridge-3.2.0-2024x.zip` (relative to the
 repository root). It contains the resource installation descriptor and the
 `plugins/` directory structure required by the installer.
 
@@ -207,7 +207,7 @@ use `-Dcameo.mcp.diagnostics.gui=false`. See [diagnostic testing](docs/developme
 | `JAVA17_HOME` | unset | Alternate Java 17 home override |
 | `CAMEO_MCP_STRUCTURED_RESPONSES` | deprecated | Structured MCP object responses are now always used; this flag is kept only for backward compatibility with older docs |
 
-In version 3.1.0, choose **Options > Environment >
+In version 3.1.0 or newer, choose **Options > Environment >
 Cameo MCP Bridge > Listening port** in Cameo's System Options dialog, enter a port
 from 1 to 65535, and restart Cameo. The default is `18740`. This setting is not included in the published 3.0.0 ZIP.
 
@@ -215,12 +215,17 @@ The Java system property `cameo.mcp.port` overrides the saved setting and remain
 available in 3.0.0. Add it to your Cameo `*.vmoptions` file:
 
 ```
--Dcameo.mcp.port=18741
+-Dcameo.mcp.port=18742
 ```
 
-And set `CAMEO_BRIDGE_PORT=18741` in your environment before launching Claude Code.
+And set `CAMEO_BRIDGE_PORT=18742` in your environment before launching Claude Code.
 
 For local health checks, the plugin now responds on both `/api/v1/status` and the legacy `/status` alias. The same applies to `/api/v1/capabilities` and `/capabilities`.
+
+Browser clients use the dedicated paired service introduced in 3.3.0, normally
+on port `18741`. The native API remains on its separately configured port and
+rejects direct browser requests. See the [browser-service contract](docs/development/browser-service.md)
+for configuration, authentication, typed operations and native approval requirements.
 
 ## Tool Reference
 
@@ -581,9 +586,9 @@ The bridge builds models correctly -- elements, relationships, directionality, s
 This bridge is designed for **local development use only**.
 
 - The HTTP server binds to `127.0.0.1` (localhost only) -- not accessible from the network
-- There is **no authentication** on the HTTP endpoints
+- The native HTTP API has **no application authentication**; the browser service requires origin-bound bearer sessions and native approval
 - The `cameo_execute_macro` tool executes **arbitrary Groovy code** inside the Cameo JVM with full access to the filesystem, network, and classloader
-- CORS headers are set to `*` (wildcard) -- any webpage in a local browser could theoretically make requests to the bridge
+- Direct browser requests to the native API are denied; the dedicated browser service exposes only typed operations and independently approved additive writes
 
 **Do not** expose the bridge port to the network, run it on shared/multi-user machines without additional access controls, or use it in production environments without adding authentication.
 

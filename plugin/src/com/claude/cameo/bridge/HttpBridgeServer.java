@@ -119,6 +119,7 @@ public class HttpBridgeServer {
 
     private HttpContext createContext(String path, com.sun.net.httpserver.HttpHandler handler) {
         HttpContext context = server.createContext(path, handler);
+        context.getFilters().add(new com.claude.cameo.bridge.util.BrowserRequestFilter());
         context.getFilters().add(new RequestDiagnosticsFilter());
         return context;
     }

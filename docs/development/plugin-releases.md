@@ -1,12 +1,12 @@
 # Build and publish target-specific plugin ZIPs
 
-The 3.3.0 plugin can start a separate loopback browser listener, normally on
+The 3.3.1 plugin can start a separate loopback browser listener, normally on
 port 18741. Ensure the configured native and browser ports are distinct and
-available before startup. Native Python clients must match plugin 3.3.0. Keep
+available before startup. Native Python clients must match plugin 3.3.1. Keep
 qualified previous ZIPs for rollback. See [browser-service configuration](browser-service.md).
 
 Run these commands from the repository root. The current release is
-[3.3.0 for 2022x and 2024x](https://github.com/Open-MBEE/cameo-mcp-bridge/releases/tag/v3.3.0),
+[3.3.1 for 2022x and 2024x](https://github.com/Open-MBEE/cameo-mcp-bridge/releases/tag/v3.3.1),
 with the paired browser service and native approval dialogs. Previous releases
 remain available for rollback.
 Keep the target (`2024x` or `2022x`) in downloadable filenames and release titles.
@@ -50,7 +50,7 @@ with the same properties and platform-appropriate paths. Java executable
 selection is platform-neutral. Set `JAVA_HOME` to JDK 17 for Gradle and optionally
 pass `-Pjdk17Home` for the compiler and `-PtestJavaHome` for the test JVM.
 
-The 3.3.0 output is `plugin/build/2024x/cameo-mcp-bridge-3.3.0-2024x.zip`.
+The 3.3.1 output is `plugin/build/2024x/cameo-mcp-bridge-3.3.1-2024x.zip`.
 `assemblePlugin` only prepares a directory; `packagePlugin` creates the
 Resource/Plugin Manager installer. Build/test/package do not deploy the plugin.
 Do not run `deploy`, `install.sh`, restart Cameo, or mutate a model as a side
@@ -62,7 +62,7 @@ extract the ZIP into a temporary directory; it must contain:
 ```text
 data/resourcemanager/MDR_Plugin_Cameo_MCP_Bridge_11974001_descriptor.xml
 plugins/com.claude.cameo.bridge/plugin.xml
-plugins/com.claude.cameo.bridge/cameo-mcp-bridge-3.3.0.jar
+plugins/com.claude.cameo.bridge/cameo-mcp-bridge-3.3.1.jar
 ```
 
 Verify every resource descriptor installation source exists in the ZIP, the
@@ -71,7 +71,7 @@ contains `com/claude/cameo/bridge/CameoMCPBridgePlugin.class`. Do not include Ca
 SDK classes/JARs. Record the checksum:
 
 ```powershell
-Get-FileHash ./plugin/build/2024x/cameo-mcp-bridge-3.3.0-2024x.zip -Algorithm SHA256
+Get-FileHash ./plugin/build/2024x/cameo-mcp-bridge-3.3.1-2024x.zip -Algorithm SHA256
 ```
 
 The original 3.0.0 build passed 32 plugin tests against local 2024x R2 libraries.
@@ -81,9 +81,9 @@ Compile/unit verification does not establish live runtime support.
 
 ## Additional 2022x build
 
-The shared 3.3.0 source also builds against the local 2022x installation. The
+The shared 3.3.1 source also builds against the local 2022x installation. The
 prior 3.1.0 artifact passed installation and basic read-only live tests on 2022x;
-that evidence does not qualify every new 3.3.0 browser path. Native
+that evidence does not qualify every new 3.3.1 browser path. Native
 export and guarded-write workflows remain experimental pending separate live
 qualification; unit tests and basic smoke checks do not qualify those workflows.
 
@@ -93,7 +93,7 @@ From the repository root in PowerShell:
 $env:JAVA_HOME = 'C:/path/to/jdk-17'
 & ./plugin/gradlew.bat -p plugin clean test packagePlugin sdkLinkageSmoke '-PcameoTarget=2022x' '-PcameoHome=C:/Program Files/Magic Systems of Systems Architect' "-Pjdk17Home=$env:JAVA_HOME" --console=plain
 if ($LASTEXITCODE -ne 0) { throw '2022x validation failed' }
-py -3 scripts/verify_plugin_zip.py plugin/build/2022x/cameo-mcp-bridge-3.3.0-2022x.zip --target 2022x
+py -3 scripts/verify_plugin_zip.py plugin/build/2022x/cameo-mcp-bridge-3.3.1-2022x.zip --target 2022x
 ```
 
 Gradle and compilation run on JDK 17, with `--release 11` for the 2022x target.
@@ -103,7 +103,7 @@ checks the actual Java feature version, not just the compiler flag. The SDK's
 own Gson is used (2.2.4 on the tested 2022x install); it is never bundled.
 Hamcrest 1.3 is a test-only dependency downloaded from Maven Central on first use.
 
-The ZIP is `plugin/build/2022x/cameo-mcp-bridge-3.3.0-2022x.zip`, and the test report
+The ZIP is `plugin/build/2022x/cameo-mcp-bridge-3.3.1-2022x.zip`, and the test report
 is `plugin/build/2022x/reports/tests/test/index.html`. Build target names and SDK
 descriptor versions are validated before compilation. Generated descriptors use
 2022x plugin dependencies and `mdVersionMin=mdVersionMax=2022x`; installation on
@@ -115,7 +115,7 @@ Always run the 2024x regression gate after shared-source changes:
 ```powershell
 & ./plugin/gradlew.bat -p plugin clean test packagePlugin sdkLinkageSmoke '-PcameoTarget=2024x' '-PcameoHome=C:/Program Files/MSOSA2024xR2' "-Pjdk17Home=$env:JAVA_HOME" --console=plain
 if ($LASTEXITCODE -ne 0) { throw '2024x regression gate failed' }
-py -3 scripts/verify_plugin_zip.py plugin/build/2024x/cameo-mcp-bridge-3.3.0-2024x.zip --target 2024x
+py -3 scripts/verify_plugin_zip.py plugin/build/2024x/cameo-mcp-bridge-3.3.1-2024x.zip --target 2024x
 ```
 
 Outputs (including `clean`) are isolated under `plugin/build/<target>/`. Existing
@@ -126,7 +126,7 @@ verifier checks target descriptors, every class's Java bytecode level, embedded
 build metadata, installer paths, absence of foreign dependency classes/JARs, and
 prints SHA-256.
 
-Both variants use bridge version 3.3.0 and the same Python client contract.
+Both variants use bridge version 3.3.1 and the same Python client contract.
 Capabilities add `cameoTarget`, `targetJavaRelease`, `runtimeJavaVersion`,
 `platformQualification`, and `platformLimitations`. Matching older 2024x builds
 without the additive fields remain accepted. Unknown target names are refused.
@@ -141,7 +141,7 @@ and the remaining qualification limits. See the
 
 ## Publish a new release
 
-The following example shows the 3.3.0 publication workflow. For a later release,
+The following example shows the 3.3.1 publication workflow. For a later release,
 set the version to the new version already committed and built; never replace
 the existing release or move its tag. Prepare a Markdown notes file with
 changes, supported platform, matching Python version, source SHA, checksum,
@@ -149,7 +149,7 @@ test results, and any live-validation limitations.
 
 ```powershell
 $repo = 'Open-MBEE/cameo-mcp-bridge'
-$version = '3.3.0'
+$version = '3.3.1'
 $tag = "v$version"
 $assets = @(
     "plugin/build/2024x/cameo-mcp-bridge-$version-2024x.zip",

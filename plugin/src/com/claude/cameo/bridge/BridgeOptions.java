@@ -32,6 +32,11 @@ public final class BridgeOptions extends AbstractPropertyOptionsGroup {
         browserPort.setGroup("Browser service");
         browserPort.setDescription("Protected loopback browser service. Must differ from the native listening port. Restart Cameo after changing.");
         addProperty(browserPort, true);
+        NumberProperty duration = new NumberProperty("browserSessionMinutes", 60, 15, 480);
+        duration.setResourceProvider((key, property) -> "Browser session duration (minutes)");
+        duration.setGroup("Browser service");
+        duration.setDescription("Absolute browser session lifetime (15-480 minutes), default 60. Activity does not extend it. Restart Cameo after changing. Model changes still require separate approval.");
+        addProperty(duration, true);
         StringProperty origins = new StringProperty("browserOrigins", "https://kotar.app,http://localhost:5173");
         origins.setResourceProvider((key, property) -> "Allowed browser origins");
         origins.setGroup("Browser service");
@@ -53,6 +58,13 @@ public final class BridgeOptions extends AbstractPropertyOptionsGroup {
     public int getBrowserPort() {
         Property property = getProperty("browserPort");
         return property instanceof NumberProperty ? ((NumberProperty) property).getInteger() : 18741;
+    }
+
+    public int getBrowserSessionMinutes() {
+        Property property = getProperty("browserSessionMinutes");
+        int minutes = property instanceof NumberProperty ? ((NumberProperty) property).getInteger() : 60;
+        if (minutes < 15 || minutes > 480) throw new IllegalArgumentException("Browser session duration must be 15-480 minutes");
+        return minutes;
     }
 
     public boolean isBrowserEnabled() {

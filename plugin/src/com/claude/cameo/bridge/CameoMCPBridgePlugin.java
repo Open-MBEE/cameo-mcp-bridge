@@ -50,7 +50,7 @@ public class CameoMCPBridgePlugin extends Plugin {
                     if (browserPort == port) throw new IllegalArgumentException("Browser and native ports must differ");
                     com.claude.cameo.bridge.browser.BrowserBridge service = new com.claude.cameo.bridge.browser.BrowserBridge(
                         options.getBrowserOrigins(), new com.claude.cameo.bridge.browser.NativeBrowserBackend(port),
-                        new com.claude.cameo.bridge.browser.CameoBrowserApproval());
+                        new com.claude.cameo.bridge.browser.CameoBrowserApproval(options.getBrowserSessionMinutes()), options.getBrowserSessionMinutes());
                     try { browser = new com.claude.cameo.bridge.browser.BrowserHttpServer(browserPort, service); }
                     catch (Exception error) { service.close(); throw error; }
                     browser.start();

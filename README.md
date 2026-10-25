@@ -1,6 +1,6 @@
 # Cameo MCP Bridge
 
-Version **3.3.0** exposes native model export resources and guarded structural
+Version **3.3.1** exposes native model export resources and guarded structural
 creation. It keeps Cameo SDK access, model consistency and transaction ownership
 in this plugin; consumers own interpretation and transformation of exported data.
 See [native export](docs/development/native-model-export.md) and

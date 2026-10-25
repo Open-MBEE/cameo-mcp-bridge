@@ -33,6 +33,7 @@ public final class BrowserBridge implements AutoCloseable {
             this.owner = owner; this.project = project; this.reference = reference; this.plan = plan; this.expires = expires;
         }
     }
+    private final int sessionMinutes;
     private final Backend backend;
     private final Approval approval;
     private final LongSupplier clock;
@@ -48,6 +49,14 @@ public final class BrowserBridge implements AutoCloseable {
         this(origins, backend, approval, () -> System.nanoTime() / 1000000);
     }
     public BrowserBridge(Set<String> origins, Backend backend, Approval approval, LongSupplier clock) {
+        this(origins, backend, approval, 60, clock);
+    }
+    public BrowserBridge(Set<String> origins, Backend backend, Approval approval, int sessionMinutes) {
+        this(origins, backend, approval, sessionMinutes, () -> System.nanoTime() / 1000000);
+    }
+    public BrowserBridge(Set<String> origins, Backend backend, Approval approval, int sessionMinutes, LongSupplier clock) {
+        if (sessionMinutes < 15 || sessionMinutes > 480) throw new IllegalArgumentException("Browser session duration must be 15-480 minutes");
+        this.sessionMinutes = sessionMinutes;
         this.origins = new HashSet<>(); for (String origin : origins) this.origins.add(BrowserProtocol.origin(origin));
         this.backend = backend; this.approval = approval; this.clock = clock;
         cleanup.scheduleWithFixedDelay(this::expire, 15, 15, TimeUnit.SECONDS);
@@ -67,7 +76,7 @@ public final class BrowserBridge implements AutoCloseable {
         BrowserProtocol.exact(request, "pairingId"); String id = BrowserProtocol.text(request, "pairingId"); Pairing pair = pairings.get(id);
         if (pair == null || !pair.origin.equals(origin) || pair.expires <= clock.getAsLong()) throw new IllegalStateException("Pairing expired");
         JsonObject result = new JsonObject(); result.addProperty("state", pair.state);
-        if (pair.token != null) { result.addProperty("protocol", 1); result.addProperty("token", pair.token); result.addProperty("expiresIn", 900); result.addProperty("reviewedCreationAvailable", true); result.addProperty("nativeApproval", true); pairings.remove(id); }
+        if (pair.token != null) { result.addProperty("protocol", 1); result.addProperty("token", pair.token); result.addProperty("expiresIn", sessionMinutes * 60); result.addProperty("reviewedCreationAvailable", true); result.addProperty("nativeApproval", true); pairings.remove(id); }
         return result;
     }
     private void approvePair(String id, Pairing pair) {
@@ -80,7 +89,7 @@ public final class BrowserBridge implements AutoCloseable {
             synchronized (this) {
                 if (closed || pairings.get(id) != pair || pair.expires <= clock.getAsLong()) return;
                 pair.state = accepted ? "approved" : "declined";
-                if (accepted && sessions.size() < 4) { pair.token = secret(); sessions.put(pair.token, new Session(pair.origin, clock.getAsLong() + 900000)); }
+                if (accepted && sessions.size() < 4) { pair.token = secret(); sessions.put(pair.token, new Session(pair.origin, clock.getAsLong() + sessionMinutes * 60000L)); }
             }
         } catch (Exception error) { synchronized (this) { pair.state = "declined"; } }
     }

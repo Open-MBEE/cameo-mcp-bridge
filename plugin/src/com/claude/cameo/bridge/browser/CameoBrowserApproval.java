@@ -7,6 +7,9 @@ import java.util.concurrent.*;
 
 /** The browser can request a review, but only a native Cameo dialog authorizes it. */
 public final class CameoBrowserApproval implements BrowserBridge.Approval {
+    private final int sessionMinutes;
+    public CameoBrowserApproval() { this(60); }
+    public CameoBrowserApproval(int sessionMinutes) { this.sessionMinutes = sessionMinutes; }
     @Override public boolean confirm(String origin, JsonObject plan) throws Exception {
         return confirm(origin, plan, () -> true);
     }
@@ -16,7 +19,7 @@ public final class CameoBrowserApproval implements BrowserBridge.Approval {
             try {
                 String title = plan == null ? "Connect browser client to Cameo" : "Approve Cameo creation plan";
                 String text = "Requesting browser client: " + origin + "\n\n" + (plan == null
-                    ? "Allow this browser session to read this Cameo project and capture model data?\nModel changes require a separate approval. Access expires after 15 minutes."
+                    ? "Allow this browser session to read this Cameo project and capture model data?\nModel changes require a separate approval. Access expires after " + sessionMinutes + " minutes."
                     : "Review this exact stored plan. Only additive packages, Blocks and properties are supported.\nNothing is saved automatically.\n\n" + new GsonBuilder().setPrettyPrinting().create().toJson(plan));
                 JTextArea content = new JTextArea(text); content.setEditable(false); content.setLineWrap(true); content.setWrapStyleWord(true); content.setCaretPosition(0);
                 JScrollPane scroll = new JScrollPane(content); scroll.setPreferredSize(new Dimension(720, plan == null ? 210 : 560));

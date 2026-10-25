@@ -1,4 +1,4 @@
-# Browser service contract (protocol 1, plugin 3.3.0)
+# Browser service contract (protocol 1, plugin 3.3.1)
 
 The plugin provides a dedicated, origin-bound browser API alongside the native
 HTTP API. Both run inside Cameo. The browser service owns session authorization
@@ -19,6 +19,7 @@ Cameo MCP Bridge**, its settings are in the **Browser service** group:
 | --- | --- |
 | Enable browser service | Start the browser listener with Cameo; enabled by default |
 | Browser service port | Loopback listening port; default 18741 |
+| Browser session duration (minutes) | Absolute lifetime; default 60, range 15–480; restart required |
 | Allowed browser origins | Comma-separated exact browser origins permitted to request native approval |
 
 Inspect the configured origin list in Environment Options. A configured origin
@@ -71,7 +72,7 @@ claim returns `state:approved`, `token`, `expiresIn:900`,
 The claim is single use. Decline returns `state:declined`; an expired request
 cannot grant access. At most four pairings and four sessions are retained.
 
-The token is bound to the requesting origin and expires after 15 minutes. Native
+The token is bound to the requesting origin and expires after the configured absolute lifetime (default 60 minutes). Native
 dialogs identify that origin. Cancellation and expiry dismiss a pending dialog;
 its UI-thread cancellation check does not wait on HTTP request monitors.
 
@@ -151,7 +152,7 @@ Status reports `transport:paired-browser-v1`, `nativeApproval:true`, the support
 browser operation list, capability flags and native plugin metadata. The native
 metadata's larger endpoint list does not authorize those routes through the
 browser API. Negotiate the browser protocol and plugin version explicitly;
-protocol 1 is the contract shipped by plugin 3.3.0. Native Python clients retain
+protocol 1 is the contract shipped by plugin 3.3.1. Native Python clients retain
 their exact plugin/client version checks.
 
 The same contract is built for 2024x/Java 17 and 2022x/Java 11. See
@@ -159,3 +160,13 @@ The same contract is built for 2024x/Java 17 and 2022x/Java 11. See
 [bridge validation evidence](browser-service-validation.md). SDK linkage and
 synthetic approval tests do not replace live native-dialog and model acceptance.
 Automated validation must not install/restart Cameo or mutate a running model.
+
+## Browser session duration (3.3.1)
+
+In Environment Options Ã¢â€ â€™ Cameo MCP Bridge Ã¢â€ â€™ Browser service, set **Browser session
+duration (minutes)**. Default: **60**; allowed range: **15Ã¢â‚¬â€œ480**. Restart Cameo
+after changing it. This is an absolute lifetime from approval, not an inactivity
+timeout; activity does not renew it. Missing settings use 60 minutes. The native
+connection dialog shows the configured duration and pairing returns it in seconds.
+Disconnect/revocation, origin binding and the separate two-minute model-change
+approval remain enforced. Update exact-version clients to 3.3.1 before connecting.

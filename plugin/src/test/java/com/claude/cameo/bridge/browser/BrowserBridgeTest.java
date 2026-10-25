@@ -42,6 +42,23 @@ public class BrowserBridgeTest {
         for (int i = 0; i < 100; i++) { JsonObject value = bridge.review(ORIGIN, token, ref, false); if (!value.get("state").getAsString().equals("pending")) return value; Thread.sleep(10); }
         throw new AssertionError("Review not completed");
     }
+    @Test public void defaultSessionSurvivesFifteenMinutesAndExpiresAtSixty() throws Exception {
+        String token = pair(); now.addAndGet(900001); call(token, "project");
+        now.set(3600001); assertThrows(IllegalStateException.class, () -> call(token, "project"));
+    }
+    @Test public void configuredDurationIsAdvertisedAndEnforced() throws Exception {
+        bridge.close(); bridge = new BrowserBridge(Set.of(ORIGIN), backend, (origin, plan) -> true, 120, now::get);
+        JsonObject initial = bridge.pair(ORIGIN, new JsonObject()); JsonObject ref = new JsonObject(); ref.add("pairingId", initial.get("pairingId"));
+        JsonObject result = null;
+        for (int i = 0; i < 100; i++) { result = bridge.pair(ORIGIN, ref); if (result.has("token")) break; Thread.sleep(10); }
+        assertEquals(7200, result.get("expiresIn").getAsInt()); String token = result.get("token").getAsString();
+        now.addAndGet(3600001); call(token, "project");
+        now.set(7200001); assertThrows(IllegalStateException.class, () -> call(token, "project"));
+    }
+    @Test public void invalidDurationsAreRejected() {
+        for (int minutes : new int[] {0, 14, 481, Integer.MAX_VALUE})
+            assertThrows(IllegalArgumentException.class, () -> new BrowserBridge(Set.of(ORIGIN), backend, (origin, plan) -> true, minutes, now::get));
+    }
     @Test public void originsAreCanonicalAndExplicit() {
         assertEquals("https://internal.example:8443", BrowserProtocol.origin("https://internal.example:8443"));
         assertEquals("http://localhost:5173", BrowserProtocol.origin("http://localhost:5173"));
@@ -88,7 +105,7 @@ public class BrowserBridgeTest {
         bridge.revoke(ORIGIN, token); assertThrows(IllegalStateException.class, () -> call(token, "project"));
     }
     @Test public void expiredCaptureIsReleasedBeforeDataReturns() throws Exception {
-        String token = pair(); call(token, "project"); backend.onExport = () -> now.addAndGet(900001);
+        String token = pair(); call(token, "project"); backend.onExport = () -> now.addAndGet(3600001);
         assertThrows(IllegalStateException.class, () -> call(token, "export", object("{\"projectId\":\"project-one\",\"rootIds\":[\"root\"]}"))); assertEquals(1, backend.releases);
     }
     @Test public void staleReviewAfterProjectSwitchNeverWrites() throws Exception {

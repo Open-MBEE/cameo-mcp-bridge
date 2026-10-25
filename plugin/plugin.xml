@@ -2,7 +2,7 @@
 <plugin
     id="com.claude.cameo.bridge"
     name="Cameo MCP Bridge"
-    version="3.3.0"
+    version="3.3.1"
     provider-name="Claude Code"
     class="com.claude.cameo.bridge.CameoMCPBridgePlugin">
     <requires>
@@ -12,6 +12,6 @@
         <required-plugin id="com.nomagic.magicdraw.visualization.relationshipmap" name="Relation Map" version="2024x"/>
     </requires>
     <runtime>
-        <library name="cameo-mcp-bridge-3.3.0.jar"/>
+        <library name="cameo-mcp-bridge-3.3.1.jar"/>
     </runtime>
 </plugin>
